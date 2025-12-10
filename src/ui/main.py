@@ -917,8 +917,10 @@ def before_request():
         # Requests from other sources
         app.config["SESSION_COOKIE_NAME"] = "bw_ui_session"
         app.config["SESSION_COOKIE_SECURE"] = False
+        app.config["SESSION_COOKIE_DOMAIN"] = False
         app.config["REMEMBER_COOKIE_NAME"] = "bw_ui_remember_token"
         app.config["REMEMBER_COOKIE_SECURE"] = False
+        app.config["REMEMBER_COOKIE_DOMAIN"] = False
 
     metadata = None
     app.config["SCRIPT_NONCE"] = token_urlsafe(32)

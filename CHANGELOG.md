@@ -16,6 +16,7 @@
 - [UI] Enhance service configuration handling during edits and renames to ensure consistency and prevent data loss
 - [UI] Enhance session management with Redis support and configurable session lifetime
 - [UI] Renamed "Global Configuration" to "Global Settings" in the web UI for clarity
+- [UI] Address CSRF token issues in the web UI when not connecting through BunkerWeb
 - [LINUX] Support Fedora 43
 - [LINUX] Update version retrieval for RPM packaging to ensure correct sorting for release candidates
 - [DOCS] Add documentation about the new logging settings and how to configure them
