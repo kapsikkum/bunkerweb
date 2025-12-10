@@ -16,6 +16,7 @@ from cryptography.hazmat.primitives import hashes
 from flask import Blueprint, render_template, request, jsonify
 from flask_login import login_required
 
+import re
 from app.dependencies import DB  # type: ignore
 from app.utils import LOGGER  # type: ignore
 from app.routes.utils import cors_required  # type: ignore
@@ -346,6 +347,9 @@ def letsencrypt_delete():
     cert_name = request.json.get("cert_name")
     if not cert_name:
         return jsonify({"status": "ko", "message": "Missing cert_name"}), 400
+    # Only allow cert_name with alphanumerics, dash, dot, underscore (no slashes, backslashes, or traversal)
+    if not re.fullmatch(r"[A-Za-z0-9._-]+", cert_name):
+        return jsonify({"status": "ko", "message": "Invalid cert_name"}), 400
 
     download_certificates()
 
