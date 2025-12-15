@@ -22,7 +22,7 @@ class Controller(Config):
         self._first_start = True
         namespaces = getenv("NAMESPACES")
         if namespaces:
-            self._namespaces = namespaces.strip().split(" ")
+            self._namespaces = namespaces.strip().split()
             self._logger.info(
                 "Only instances and services in the "
                 + ", ".join(f"{namespace!r}" for namespace in self._namespaces)

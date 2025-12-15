@@ -588,7 +588,7 @@ def healthcheck_job():
                 if not api_caller.send_to_apis(
                     "POST",
                     f"/reload?test={'no' if DISABLE_CONFIGURATION_TESTING else 'yes'}",
-                    timeout=max(RELOAD_MIN_TIMEOUT, 3 * len(env.get("SERVER_NAME", "www.example.com").split(" "))),
+                    timeout=max(RELOAD_MIN_TIMEOUT, 3 * len(env.get("SERVER_NAME", "www.example.com").split())),
                 )[0]:
                     HEALTHCHECK_LOGGER.error(f"Error while reloading instance {bw_instance.endpoint}")
                     ret = SCHEDULER.db.update_instance(db_instance["hostname"], "loading")
@@ -993,7 +993,7 @@ if __name__ == "__main__":
                     success, responses = SCHEDULER.send_to_apis(
                         "POST",
                         f"/reload?test={'no' if DISABLE_CONFIGURATION_TESTING else 'yes'}",
-                        timeout=max(RELOAD_MIN_TIMEOUT, 3 * len(env.get("SERVER_NAME", "www.example.com").split(" "))),
+                        timeout=max(RELOAD_MIN_TIMEOUT, 3 * len(env.get("SERVER_NAME", "www.example.com").split())),
                         response=True,
                     )
                     if not success:
@@ -1098,7 +1098,7 @@ if __name__ == "__main__":
                         if not SCHEDULER.send_to_apis(
                             "POST",
                             f"/reload?test={'no' if DISABLE_CONFIGURATION_TESTING else 'yes'}",
-                            timeout=max(RELOAD_MIN_TIMEOUT, 3 * len(env.get("SERVER_NAME", "www.example.com").split(" "))),
+                            timeout=max(RELOAD_MIN_TIMEOUT, 3 * len(env.get("SERVER_NAME", "www.example.com").split())),
                         )[0]:
                             LOGGER.error("Error while reloading bunkerweb with failover configuration, skipping ...")
                 elif not reachable:
