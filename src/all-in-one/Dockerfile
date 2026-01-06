@@ -1,10 +1,10 @@
-FROM nginx:1.28-alpine-slim@sha256:3593d957405454b184539e7ed906f71fdb69654bfcbc25f5ad39ed960ef1c7bb AS builder
+FROM nginx:1.28.0-alpine-slim@sha256:ce2bd4775ed6859d35f47d65401ee9f35f1dd00b32ed05f0ce38b68aa1830195 AS builder
 
 # Export var for specific actions on linux/arm/v7
 ARG TARGETPLATFORM
 
 # Install temporary requirements for the dependencies
-RUN apk add --no-cache bash autoconf libtool automake geoip-dev g++ gcc curl-dev libxml2-dev pcre-dev make linux-headers musl-dev gd-dev gnupg brotli-dev openssl-dev patch readline-dev yajl yajl-dev yajl-tools py3-pip python3-dev libffi-dev postgresql-dev cargo rust
+RUN apk add --no-cache bash autoconf libtool automake geoip-dev g++ gcc curl-dev libxml2-dev pcre2-dev make linux-headers musl-dev gd-dev gnupg brotli-dev openssl-dev patch readline-dev yajl yajl-dev yajl-tools py3-pip python3-dev libffi-dev postgresql-dev cargo rust lmdb-dev libfuzzy2-dev pkgconfig ca-certificates coreutils libc-dev
 
 WORKDIR /tmp/bunkerweb/deps
 
@@ -153,13 +153,13 @@ RUN if [ "$SKIP_MINIFY" != "yes" ] && [ "$SKIP_MINIFY_HTML" != "yes" ]; then \
     echo "Skipping HTML minification"; \
     fi
 
-FROM nginx:1.28-alpine-slim@sha256:3593d957405454b184539e7ed906f71fdb69654bfcbc25f5ad39ed960ef1c7bb
+FROM nginx:1.28.0-alpine-slim@sha256:ce2bd4775ed6859d35f47d65401ee9f35f1dd00b32ed05f0ce38b68aa1830195
 
 # Set default umask to prevent huge recursive chmod increasing the final image size
 RUN umask 027
 
 # Install runtime dependencies including supervisord
-RUN apk add --no-cache bash curl geoip grep libgcc libgd libmagic libpq libstdc++ libxml2 mariadb-client mariadb-connector-c openssl pcre postgresql-client python3 py3-pip sed sqlite tzdata unzip yajl supervisor
+RUN apk add --no-cache bash curl geoip grep libgcc libgd libmagic libpq libstdc++ libxml2 mariadb-client mariadb-connector-c openssl pcre2 postgresql-client python3 py3-pip sed sqlite tzdata unzip yajl supervisor brotli lmdb libfuzzy2
 
 # Fix CVEs
 RUN apk add --no-cache "busybox>=1.37.0-r14" "busybox-binsh>=1.37.0-r14" "ssl_client>=1.37.0-r14" # CVE-2024-58251 CVE-2025-46394
