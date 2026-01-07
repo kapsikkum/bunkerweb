@@ -1,5 +1,10 @@
 # Changelog
 
+## ??
+
+- [BUGFIX] Fix wrong modsecurity reason data under heavy load
+- [DEPS] Updated Modsecurity nginx connector version to 1.0.4
+
 ## v1.6.7~rc2 - 2026/01/??
 
 - [BUGFIX] Fix wrong certificate name checks in Let's Encrypt
