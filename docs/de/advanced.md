@@ -3340,54 +3340,24 @@ Mit diesem Plugin können Administratoren mühelos Benutzerkonten erstellen, akt
 
 ## Easy Resolve <img src='../../assets/img/pro-icon.svg' alt='crow pro icon' height='24px' width='24px' style="transform : translateY(3px);"> (PRO)
 
+<p align="center">
+    <iframe style="display: block;" width="560" height="315" data-src="https://www.youtube-nocookie.com/embed/45vX0WJqjxo" title="Easy Resolve" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+</p>
+
 Das Easy Resolve Plugin ermöglicht es Ihnen, Fehlalarme und wiederkehrende Probleme direkt von der Berichtsseite aus schnell zu beheben. Es wandelt geführte "Resolve"-Aktionen in sichere, bereichsbezogene Konfigurationsupdates um – ohne manuelle Bearbeitung.
 
 ### Funktionen
 
--   Ein-Klick-Aktionen aus Berichten und Berichtsdetails.
--   Kontextbezogene Vorschläge für ModSecurity, Blacklist und DNSBL.
--   Generiert sichere ModSecurity-Ausschlüsse oder aktualisiert Ignorierlisten.
--   Wendet Änderungen auf Dienst- oder globaler Ebene mit Berechtigungsprüfungen an.
--   Optionales automatisches Öffnen der zugehörigen Konfigurationsseite nach der Anwendung.
+- Ein-Klick-Aktionen aus Berichten und Berichtsdetails.
+- Kontextbezogene Vorschläge für ModSecurity, Blacklist, DNSBL, Ratenbegrenzung, erlaubte HTTP-Methoden und Whitelisted/Blacklisted Länder.
+- Generiert sichere ModSecurity-Ausschlüsse oder aktualisiert Ignorierlisten.
+- Wendet Änderungen auf Dienst- oder globaler Ebene mit Berechtigungsprüfungen an.
+- Optionales automatisches Öffnen der zugehörigen Konfigurationsseite nach der Anwendung.
 
 <figure markdown>
   ![Übersicht](assets/img/easy-resolve.png){ align=center }
   <figcaption>Berichtsseite - mit Easy Resolve</figcaption>
 </figure>
-
-<div class="grid grid-2" markdown>
-<figure markdown>
-  ![ModSecurity beheben](assets/img/easy-resolve-modsecurity.png){ width="100%" }
-  <figcaption>ModSecurity beheben</figcaption>
-</figure>
-<figure markdown>
-  ![DNSBL beheben](assets/img/easy-resolve-dnsbl.png){ width="100%" }
-  <figcaption>DNSBL beheben</figcaption>
-</figure>
-</div>
-
-<div class="grid grid-5" markdown>
-<figure markdown>
-  ![Blacklist beheben - IP](assets/img/easy-resolve-blacklist-ip.png){ width="100%" }
-  <figcaption>Blacklist - IP</figcaption>
-</figure>
-<figure markdown>
-  ![Blacklist beheben - User-Agent](assets/img/easy-resolve-blacklist-ua.png){ width="100%" }
-  <figcaption>Blacklist - User-Agent</figcaption>
-</figure>
-<figure markdown>
-  ![Blacklist beheben - rDNS](assets/img/easy-resolve-blacklist-rdns.png){ width="100%" }
-  <figcaption>Blacklist - rDNS</figcaption>
-</figure>
-<figure markdown>
-  ![Blacklist beheben - ASN](assets/img/easy-resolve-blacklist-asn.png){ width="100%" }
-  <figcaption>Blacklist - ASN</figcaption>
-</figure>
-<figure markdown>
-  ![Blacklist beheben - URI](assets/img/easy-resolve-blacklist-uri.png){ width="100%" }
-  <figcaption>Blacklist - URI</figcaption>
-</figure>
-</div>
 
 ## Load Balancer <img src='../assets/img/pro-icon.svg' alt='crow pro icon' height='24px' width='24px' style="transform : translateY(3px);"> (PRO)
 

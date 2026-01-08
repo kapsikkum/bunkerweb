@@ -3335,14 +3335,18 @@ STREAM 支持 :x:
   <figcaption>用户管理器 - 活动页面</figcaption>
 </figure>
 
-## 轻松解决 <img src='../../assets/img/pro-icon.svg' alt='crow pro icon' height='24px' width='24px' style="transform : translateY(3px);"> (PRO)
+## Easy Resolve <img src='../../assets/img/pro-icon.svg' alt='crow pro icon' height='24px' width='24px' style="transform : translateY(3px);"> (PRO)
+
+<p align="center">
+    <iframe style="display: block;" width="560" height="315" data-src="https://www.youtube-nocookie.com/embed/45vX0WJqjxo" title="Easy Resolve" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+</p>
 
 轻松解决插件让您可以直接从报告页面快速修复误报和重复出现的问题。它将引导式的“解决”操作转化为安全、范围受限的配置更新——无需手动编辑。
 
 ### 功能
 
 - 从报告和报告详情中一键操作。
-- 针对 ModSecurity、黑名单和 DNSBL 的上下文感知建议。
+- 针对 ModSecurity、黑名单、DNSBL、速率限制、允许的 HTTP 方法和白名单/黑名单国家的上下文感知建议。
 - 生成安全的 ModSecurity 排除规则或更新忽略列表。
 - 在服务或全局范围内应用更改，并进行权限检查。
 - 应用后可选择自动打开相关配置页面。
@@ -3351,40 +3355,6 @@ STREAM 支持 :x:
   ![概述](assets/img/easy-resolve.png){ align=center }
   <figcaption>报告页面 - 带有轻松解决功能</figcaption>
 </figure>
-
-<div class="grid grid-2" markdown>
-<figure markdown>
-  ![ModSecurity 解决](assets/img/easy-resolve-modsecurity.png){ width="100%" }
-  <figcaption>ModSecurity 解决</figcaption>
-</figure>
-<figure markdown>
-  ![DNSBL 解决](assets/img/easy-resolve-dnsbl.png){ width="100%" }
-  <figcaption>DNSBL 解决</figcaption>
-</figure>
-</div>
-
-<div class="grid grid-5" markdown>
-<figure markdown>
-  ![黑名单解决 - IP](assets/img/easy-resolve-blacklist-ip.png){ width="100%" }
-  <figcaption>黑名单 - IP</figcaption>
-</figure>
-<figure markdown>
-  ![黑名单解决 - User-Agent](assets/img/easy-resolve-blacklist-ua.png){ width="100%" }
-  <figcaption>黑名单 - User-Agent</figcaption>
-</figure>
-<figure markdown>
-  ![黑名单解决 - rDNS](assets/img/easy-resolve-blacklist-rdns.png){ width="100%" }
-  <figcaption>黑名单 - rDNS</figcaption>
-</figure>
-<figure markdown>
-  ![黑名单解决 - ASN](assets/img/easy-resolve-blacklist-asn.png){ width="100%" }
-  <figcaption>黑名单 - ASN</figcaption>
-</figure>
-<figure markdown>
-  ![黑名单解决 - URI](assets/img/easy-resolve-blacklist-uri.png){ width="100%" }
-  <figcaption>黑名单 - URI</figcaption>
-</figure>
-</div>
 
 ## Load Balancer <img src='../assets/img/pro-icon.svg' alt='crow pro icon' height='24px' width='24px' style="transform : translateY(3px);"> (PRO)
 

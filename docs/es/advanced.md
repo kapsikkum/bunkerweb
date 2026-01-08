@@ -3340,12 +3340,16 @@ Con este plugin, los administradores pueden crear, actualizar y deshabilitar cue
 
 ## Easy Resolve <img src='../../assets/img/pro-icon.svg' alt='crow pro icon' height='24px' width='24px' style="transform : translateY(3px);"> (PRO)
 
+<p align="center">
+    <iframe style="display: block;" width="560" height="315" data-src="https://www.youtube-nocookie.com/embed/45vX0WJqjxo" title="Easy Resolve" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+</p>
+
 El plugin Easy Resolve te permite remediar rápidamente falsos positivos y problemas recurrentes directamente desde la página de Informes. Convierte las acciones guiadas de "Resolver" en actualizaciones de configuración seguras y acotadas, sin edición manual.
 
 ### Características
 
 - Acciones con un solo clic desde Informes y detalles del informe.
-- Sugerencias contextuales para ModSecurity, lista negra y DNSBL.
+- Sugerencias contextuales para ModSecurity, lista negra, DNSBL, limitación de velocidad, métodos HTTP permitidos y países en lista blanca/negra.
 - Genera exclusiones seguras de ModSecurity o actualiza las listas de ignorados.
 - Aplica cambios a nivel de servicio o global con comprobaciones de permisos.
 - Apertura automática opcional de la página de configuración relacionada después de aplicar.
@@ -3354,40 +3358,6 @@ El plugin Easy Resolve te permite remediar rápidamente falsos positivos y probl
   ![Descripción general](assets/img/easy-resolve.png){ align=center }
   <figcaption>Página de informes - con Easy Resolve</figcaption>
 </figure>
-
-<div class="grid grid-2" markdown>
-<figure markdown>
-  ![Resolución de ModSecurity](assets/img/easy-resolve-modsecurity.png){ width="100%" }
-  <figcaption>Resolución de ModSecurity</figcaption>
-</figure>
-<figure markdown>
-  ![Resolución de DNSBL](assets/img/easy-resolve-dnsbl.png){ width="100%" }
-  <figcaption>Resolución de DNSBL</figcaption>
-</figure>
-</div>
-
-<div class="grid grid-5" markdown>
-<figure markdown>
-  ![Resolución de lista negra - IP](assets/img/easy-resolve-blacklist-ip.png){ width="100%" }
-  <figcaption>Lista negra - IP</figcaption>
-</figure>
-<figure markdown>
-  ![Resolución de lista negra - User-Agent](assets/img/easy-resolve-blacklist-ua.png){ width="100%" }
-  <figcaption>Lista negra - User-Agent</figcaption>
-</figure>
-<figure markdown>
-  ![Resolución de lista negra - rDNS](assets/img/easy-resolve-blacklist-rdns.png){ width="100%" }
-  <figcaption>Lista negra - rDNS</figcaption>
-</figure>
-<figure markdown>
-  ![Resolución de lista negra - ASN](assets/img/easy-resolve-blacklist-asn.png){ width="100%" }
-  <figcaption>Lista negra - ASN</figcaption>
-</figure>
-<figure markdown>
-  ![Resolución de lista negra - URI](assets/img/easy-resolve-blacklist-uri.png){ width="100%" }
-  <figcaption>Lista negra - URI</figcaption>
-</figure>
-</div>
 
 ## Load Balancer <img src='../assets/img/pro-icon.svg' alt='crow pro icon' height='24px' width='24px' style="transform : translateY(3px);"> (PRO)
 

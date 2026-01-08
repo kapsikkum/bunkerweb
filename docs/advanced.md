@@ -3339,12 +3339,16 @@ With this plugin, administrators can effortlessly create, update, and disable us
 
 ## Easy Resolve <img src='../assets/img/pro-icon.svg' alt='crow pro icon' height='24px' width='24px' style="transform : translateY(3px);"> (PRO)
 
+<p align="center">
+    <iframe style="display: block;" width="560" height="315" data-src="https://www.youtube-nocookie.com/embed/45vX0WJqjxo" title="Easy Resolve" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+</p>
+
 The Easy Resolve Plugin lets you quickly remediate false positives and recurring issues directly from the Reports page. It turns guided "Resolve" actions into safe, scoped configuration updates—without manual editing.
 
 ### Features
 
 - One‑click actions from Reports and report details.
-- Context‑aware suggestions for ModSecurity, blacklist, and DNSBL.
+- Context‑aware suggestions for ModSecurity, blacklist, DNSBL, Rate limiting, Allowed HTTP methods and whitelisted/blacklisted Country.
 - Generates safe ModSecurity exclusions or updates ignore lists.
 - Applies changes at service or global scope with permission checks.
 - Optional auto‑open of the related configuration page after apply.
@@ -3353,40 +3357,6 @@ The Easy Resolve Plugin lets you quickly remediate false positives and recurring
   ![Overview](assets/img/easy-resolve.png){ align=center }
   <figcaption>Reports page - with Easy Resolve</figcaption>
 </figure>
-
-<div class="grid grid-2" markdown>
-<figure markdown>
-  ![ModSecurity resolve](assets/img/easy-resolve-modsecurity.png){ width="100%" }
-  <figcaption>ModSecurity resolve</figcaption>
-</figure>
-<figure markdown>
-  ![DNSBL resolve](assets/img/easy-resolve-dnsbl.png){ width="100%" }
-  <figcaption>DNSBL resolve</figcaption>
-</figure>
-</div>
-
-<div class="grid grid-5" markdown>
-<figure markdown>
-  ![Blacklist resolve - IP](assets/img/easy-resolve-blacklist-ip.png){ width="100%" }
-  <figcaption>Blacklist - IP</figcaption>
-</figure>
-<figure markdown>
-  ![Blacklist resolve - User‑Agent](assets/img/easy-resolve-blacklist-ua.png){ width="100%" }
-  <figcaption>Blacklist - User‑Agent</figcaption>
-</figure>
-<figure markdown>
-  ![Blacklist resolve - rDNS](assets/img/easy-resolve-blacklist-rdns.png){ width="100%" }
-  <figcaption>Blacklist - rDNS</figcaption>
-</figure>
-<figure markdown>
-  ![Blacklist resolve - ASN](assets/img/easy-resolve-blacklist-asn.png){ width="100%" }
-  <figcaption>Blacklist - ASN</figcaption>
-</figure>
-<figure markdown>
-  ![Blacklist resolve - URI](assets/img/easy-resolve-blacklist-uri.png){ width="100%" }
-  <figcaption>Blacklist - URI</figcaption>
-</figure>
-</div>
 
 ## Load Balancer <img src='../assets/img/pro-icon.svg' alt='crow pro icon' height='24px' width='24px' style="transform : translateY(3px);"> (PRO)
 
