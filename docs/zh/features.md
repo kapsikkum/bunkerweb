@@ -2895,6 +2895,7 @@ Let's Encrypt 插件支持广泛的 DNS 提供商进行 DNS 验证。每个提�
 | `duckdns`         | DuckDNS          | `duckdns_token`                                                                                              |                                                                                                                                                                                                                                                              | [文档](https://github.com/infinityofspace/certbot_dns_duckdns/blob/main/Readme.md)           |
 | `dynu`            | Dynu             | `auth_token`                                                                                                 |                                                                                                                                                                                                                                                              | [文档](https://github.com/bikram990/certbot-dns-dynu/blob/main/README.md)                    |
 | `gehirn`          | Gehirn DNS       | `api_token`<br>`api_secret`                                                                                  |                                                                                                                                                                                                                                                              | [文档](https://certbot-dns-gehirn.readthedocs.io/en/stable/)                                 |
+| `godaddy`         | GoDaddy          | `key`<br>`secret`                                                                                            | `ttl` (默认: `600`)                                                                                                                                                                                                                                          | [文档](https://github.com/miigotu/certbot-dns-godaddy/blob/main/README.md)                   |
 | `google`          | Google Cloud     | `project_id`<br>`private_key_id`<br>`private_key`<br>`client_email`<br>`client_id`<br>`client_x509_cert_url` | `type` (默认: `service_account`)<br>`auth_uri` (默认: `https://accounts.google.com/o/oauth2/auth`)<br>`token_uri` (默认: `https://accounts.google.com/o/oauth2/token`)<br>`auth_provider_x509_cert_url` (默认: `https://www.googleapis.com/oauth2/v1/certs`) | [文档](https://certbot-dns-google.readthedocs.io/en/stable/)                                 |
 | `infomaniak`      | Infomaniak       | `token`                                                                                                      |                                                                                                                                                                                                                                                              | [文档](https://github.com/infomaniak/certbot-dns-infomaniak/blob/main/README.rst)            |
 | `ionos`           | IONOS            | `prefix`<br>`secret`                                                                                         | `endpoint` (默认: `https://api.hosting.ionos.com`)                                                                                                                                                                                                           | [文档](https://github.com/helgeerbe/certbot-dns-ionos/blob/master/README.md)                 |
@@ -3968,6 +3969,69 @@ BunkerWeb 会基于您配置的 CA 证书包和策略评估每一次 TLS 握手�
     MTLS_VERIFY_CLIENT: "optional_no_ca"
     MTLS_FORWARD_CLIENT_HEADERS: "no"
     ```
+
+## OpenAPI Validator <img src='../../assets/img/pro-icon.svg' alt='crow pro icon' height='24px' width='24px' style='transform : translateY(3px);'> (PRO)
+
+
+STREAM 支持 :x:
+
+Validates incoming HTTP requests against an OpenAPI / Swagger specification.
+
+| 参数                         | 默认值                              | 上下文    | 可重复 | 描述                                                                                            |
+| ---------------------------- | ----------------------------------- | --------- | ------ | ----------------------------------------------------------------------------------------------- |
+| `USE_OPENAPI_VALIDATOR`      | `no`                                | multisite | 否     | Enable OpenAPI route validation for this site.                                                  |
+| `OPENAPI_SPEC`               |                                     | multisite | 否     | Absolute path or HTTP(S) URL to the OpenAPI (swagger) document in JSON format.                  |
+| `OPENAPI_BASE_PATH`          |                                     | multisite | 否     | Optional base path prefix to prepend to every path in the spec (overrides servers[*].url path). |
+| `OPENAPI_ALLOW_UNSPECIFIED`  | `no`                                | multisite | 否     | Allow requests to paths not listed in the specification (otherwise they are denied).            |
+| `OPENAPI_ALLOW_INSECURE_URL` | `no`                                | multisite | 否     | Allow fetching the OpenAPI spec over plain HTTP (not recommended).                              |
+| `OPENAPI_IGNORE_URLS`        | `^/docs$ ^/redoc$ ^/openapi\.json$` | multisite | 否     | List of URL regexes to bypass OpenAPI validation (space separated).                             |
+| `OPENAPI_CACHE_TTL`          | `300`                               | global    | 否     | Seconds to cache the parsed specification in shared cache.                                      |
+| `OPENAPI_MAX_SPEC_SIZE`      | `2M`                                | global    | 否     | Maximum allowed size of the OpenAPI document (accepts suffix k/M/G).                            |
+
+## OpenID Connect <img src='../../assets/img/pro-icon.svg' alt='crow pro icon' height='24px' width='24px' style='transform : translateY(3px);'> (PRO)
+
+
+STREAM 支持 :x:
+
+OpenID Connect authentication plugin providing SSO capabilities with identity providers.
+
+| 参数                                      | 默认值                 | 上下文    | 可重复 | 描述                                                                                                                                                    |
+| ----------------------------------------- | ---------------------- | --------- | ------ | ------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `USE_OPENIDC`                             | `no`                   | multisite | 否     | Enable or disable OpenID Connect authentication.                                                                                                        |
+| `OPENIDC_DISCOVERY`                       |                        | multisite | 否     | OpenID Connect discovery URL (e.g. https://idp.example.com/.well-known/openid-configuration).                                                           |
+| `OPENIDC_CLIENT_ID`                       |                        | multisite | 否     | OAuth 2.0 client identifier registered with the IdP.                                                                                                    |
+| `OPENIDC_CLIENT_SECRET`                   |                        | multisite | 否     | OAuth 2.0 client secret registered with the IdP.                                                                                                        |
+| `OPENIDC_TOKEN_ENDPOINT_AUTH_METHOD`      | `basic`                | multisite | 否     | Token endpoint auth method: basic (recommended, HTTP Basic), post (POST body), secret_jwt (JWT with client secret), private_key_jwt (JWT with RSA key). |
+| `OPENIDC_CLIENT_RSA_PRIVATE_KEY`          |                        | multisite | 否     | PEM-encoded RSA private key for private_key_jwt authentication.                                                                                         |
+| `OPENIDC_CLIENT_RSA_PRIVATE_KEY_ID`       |                        | multisite | 否     | Optional key ID (kid) for private_key_jwt authentication.                                                                                               |
+| `OPENIDC_CLIENT_JWT_ASSERTION_EXPIRES_IN` |                        | multisite | 否     | JWT assertion lifetime in seconds (empty to use library default).                                                                                       |
+| `OPENIDC_REDIRECT_URI`                    | `/callback`            | multisite | 否     | URI path where the IdP redirects after authentication.                                                                                                  |
+| `OPENIDC_SCOPE`                           | `openid email profile` | multisite | 否     | Space-separated list of OAuth 2.0 scopes to request.                                                                                                    |
+| `OPENIDC_AUTHORIZATION_PARAMS`            |                        | multisite | 否     | Additional authorization params as comma-separated key=value pairs (e.g. audience=api,resource=xyz). URL-encode values if needed.                       |
+| `OPENIDC_USE_NONCE`                       | `yes`                  | multisite | 否     | Use nonce in authentication requests to prevent replay attacks.                                                                                         |
+| `OPENIDC_USE_PKCE`                        | `no`                   | multisite | 否     | Use PKCE (Proof Key for Code Exchange) for authorization code flow.                                                                                     |
+| `OPENIDC_FORCE_REAUTHORIZE`               | `no`                   | multisite | 否     | Force re-authorization on every request (not recommended for production).                                                                               |
+| `OPENIDC_REFRESH_SESSION_INTERVAL`        |                        | multisite | 否     | Interval in seconds to silently re-authenticate (empty to disable).                                                                                     |
+| `OPENIDC_IAT_SLACK`                       | `120`                  | multisite | 否     | Allowed clock skew in seconds for token validation.                                                                                                     |
+| `OPENIDC_ACCESS_TOKEN_EXPIRES_IN`         | `3600`                 | multisite | 否     | Default access token lifetime (seconds) if not provided by IdP.                                                                                         |
+| `OPENIDC_RENEW_ACCESS_TOKEN_ON_EXPIRY`    | `yes`                  | multisite | 否     | Automatically renew access token using refresh token when expired.                                                                                      |
+| `OPENIDC_ACCEPT_UNSUPPORTED_ALG`          | `no`                   | multisite | 否     | Accept tokens signed with unsupported algorithms (not recommended).                                                                                     |
+| `OPENIDC_LOGOUT_PATH`                     | `/logout`              | multisite | 否     | URI path for logout requests.                                                                                                                           |
+| `OPENIDC_REVOKE_TOKENS_ON_LOGOUT`         | `no`                   | multisite | 否     | Revoke tokens at the IdP when logging out.                                                                                                              |
+| `OPENIDC_REDIRECT_AFTER_LOGOUT_URI`       |                        | multisite | 否     | URI to redirect after logout (leave empty for IdP default).                                                                                             |
+| `OPENIDC_POST_LOGOUT_REDIRECT_URI`        |                        | multisite | 否     | URI to redirect after IdP logout is complete.                                                                                                           |
+| `OPENIDC_TIMEOUT_CONNECT`                 | `10000`                | multisite | 否     | Connection timeout in milliseconds for IdP requests.                                                                                                    |
+| `OPENIDC_TIMEOUT_SEND`                    | `10000`                | multisite | 否     | Send timeout in milliseconds for IdP requests.                                                                                                          |
+| `OPENIDC_TIMEOUT_READ`                    | `10000`                | multisite | 否     | Read timeout in milliseconds for IdP requests.                                                                                                          |
+| `OPENIDC_SSL_VERIFY`                      | `yes`                  | multisite | 否     | Verify SSL certificates when communicating with the IdP.                                                                                                |
+| `OPENIDC_KEEPALIVE`                       | `yes`                  | multisite | 否     | Enable HTTP keepalive for connections to the IdP.                                                                                                       |
+| `OPENIDC_HTTP_PROXY`                      |                        | multisite | 否     | HTTP proxy URL for IdP connections (e.g. http://proxy:8080).                                                                                            |
+| `OPENIDC_HTTPS_PROXY`                     |                        | multisite | 否     | HTTPS proxy URL for IdP connections (e.g. http://proxy:8080).                                                                                           |
+| `OPENIDC_USER_HEADER`                     | `X-User`               | multisite | 否     | Header to pass user info to upstream (empty to disable).                                                                                                |
+| `OPENIDC_USER_HEADER_CLAIM`               | `sub`                  | multisite | 否     | ID token claim to use for the user header (e.g. sub, email, preferred_username).                                                                        |
+| `OPENIDC_DISPLAY_CLAIM`                   | `preferred_username`   | multisite | 否     | Claim to use for display in logs and metrics (e.g. preferred_username, name, email). Falls back to User Header Claim if not found.                      |
+| `OPENIDC_DISCOVERY_DICT_SIZE`             | `1m`                   | global    | 否     | Size of the shared dictionary to cache discovery data.                                                                                                  |
+| `OPENIDC_JWKS_DICT_SIZE`                  | `1m`                   | global    | 否     | Size of the shared dictionary to cache JWKS data.                                                                                                       |
 
 ## PHP
 
