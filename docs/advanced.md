@@ -3938,3 +3938,189 @@ Templates use Lua template syntax with the following delimiters:
 - **Cached files** live in `/var/cache/bunkerweb/custom_pages`; updating the source file is enough—the job detects the new hash and reloads NGINX automatically.
 - **CSP compliance**: Always use the `nonce_script` and `nonce_style` variables for inline scripts and styles to ensure proper Content Security Policy handling.
 - **Testing templates**: You can test your templates locally by rendering them with a Lua template engine before deploying to BunkerWeb.
+
+## OpenID Connect <img src='../assets/img/pro-icon.svg' alt='crow pro icon' height='24px' width='24px' style="transform : translateY(3px);"> (PRO)
+
+<p align="center">
+    <iframe style="display: block;" width="560" height="315" data-src="https://www.youtube-nocookie.com/embed/0e4lcXTIIfs" title="OpenID Connect" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+</p>
+
+The **OpenID Connect** plugin (PRO) adds Single Sign-On (SSO) in front of your application using the standard OAuth 2.0 / OIDC **Authorization Code** flow.
+
+It runs inside BunkerWeb (NGINX/Lua) and enforces authentication during the **access phase**, so unauthenticated requests are stopped *before* they reach your upstream.
+
+### How the request flow works
+
+When a browser requests a protected URL:
+
+1. If there is no valid session, BunkerWeb redirects the user to the Identity Provider (IdP).
+2. The IdP authenticates the user and redirects back to BunkerWeb on `OPENIDC_REDIRECT_URI` (default: `/callback`) with an authorization code.
+3. BunkerWeb exchanges the code for tokens at the IdP token endpoint.
+4. Tokens are validated (issuer, audience, expiry, `iat` with slack, and signature using JWKS).
+5. A session is created and the browser is redirected back to the original URL.
+
+```mermaid
+sequenceDiagram
+  participant B as Browser
+  participant BW as BunkerWeb (OpenIDC)
+  participant IdP as Identity Provider
+  participant Up as Upstream
+
+  B->>BW: GET /protected
+  alt Not authenticated
+    BW-->>B: 302 Redirect to IdP authorize endpoint
+    B->>IdP: Authorization request (nonce/PKCE optional)
+    IdP-->>B: 302 Redirect to /callback?code=...
+    B->>BW: GET /callback?code=...
+    BW->>IdP: Token request (code exchange)
+    IdP-->>BW: ID token + access token (+ refresh token)
+    BW-->>B: 302 Redirect back to original URL
+  end
+  B->>BW: GET /protected (authenticated)
+  BW->>Up: Forward request (+ optional identity header)
+  Up-->>BW: Response
+  BW-->>B: Response
+```
+
+!!! warning "Callback URL must match the IdP client configuration"
+    Register the full callback URL on the IdP side (scheme + host + path). For example with default settings: `https://app.example.com/callback`.
+
+### Settings (explained)
+
+!!! info "Required settings"
+    At minimum, `OPENIDC_DISCOVERY` and `OPENIDC_CLIENT_ID` must be set for the plugin to operate.
+
+#### Core enablement
+
+- `USE_OPENIDC` (default: `no`): enable or disable OpenID Connect authentication for the site.
+
+#### Identity Provider (IdP) + client registration
+
+- `OPENIDC_DISCOVERY`: discovery URL (e.g. `https://idp.example.com/.well-known/openid-configuration`).
+- `OPENIDC_CLIENT_ID`: OAuth 2.0 client identifier registered with the IdP.
+- `OPENIDC_CLIENT_SECRET`: OAuth 2.0 client secret (used by `basic`, `post`, and `secret_jwt`).
+
+#### Callback / redirect
+
+- `OPENIDC_REDIRECT_URI` (default: `/callback`): callback path used by the IdP after authentication (must be registered on the IdP).
+
+#### Scopes and authorization parameters
+
+- `OPENIDC_SCOPE` (default: `openid email profile`): space-separated list of scopes to request.
+- `OPENIDC_AUTHORIZATION_PARAMS`: extra authorization parameters as comma-separated `key=value` pairs.
+
+#### Security hardening
+
+- `OPENIDC_USE_NONCE` (default: `yes`): add a nonce to authorization requests.
+- `OPENIDC_USE_PKCE` (default: `no`): enable PKCE for the Authorization Code flow.
+- `OPENIDC_IAT_SLACK` (default: `120`): allowed clock skew in seconds for token validation.
+- `OPENIDC_ACCEPT_UNSUPPORTED_ALG` (default: `no`): accept tokens with unsupported algorithms (not recommended).
+- `OPENIDC_FORCE_REAUTHORIZE` (default: `no`): force re-authorization on every request (debug-only).
+
+#### Session/token lifecycle
+
+- `OPENIDC_REFRESH_SESSION_INTERVAL`: interval in seconds to silently re-authenticate/refresh the session (empty disables).
+- `OPENIDC_ACCESS_TOKEN_EXPIRES_IN` (default: `3600`): default access token lifetime if not provided by the IdP.
+- `OPENIDC_RENEW_ACCESS_TOKEN_ON_EXPIRY` (default: `yes`): renew access token using refresh token when expired.
+
+#### Token endpoint authentication settings
+
+- `OPENIDC_TOKEN_ENDPOINT_AUTH_METHOD` (default: `basic`): `basic`, `post`, `secret_jwt`, `private_key_jwt`.
+- `OPENIDC_CLIENT_RSA_PRIVATE_KEY`: required when using `private_key_jwt`.
+- `OPENIDC_CLIENT_RSA_PRIVATE_KEY_ID`: optional `kid` for `private_key_jwt`.
+- `OPENIDC_CLIENT_JWT_ASSERTION_EXPIRES_IN`: JWT assertion lifetime in seconds.
+
+#### Logout behavior
+
+- `OPENIDC_LOGOUT_PATH` (default: `/logout`): local logout path handled by BunkerWeb.
+- `OPENIDC_REVOKE_TOKENS_ON_LOGOUT` (default: `no`): revoke tokens at the IdP during logout.
+- `OPENIDC_REDIRECT_AFTER_LOGOUT_URI`: redirect after local logout (empty uses IdP default behavior).
+- `OPENIDC_POST_LOGOUT_REDIRECT_URI`: redirect after IdP logout completes (if supported).
+
+#### Connectivity and TLS to the IdP
+
+- `OPENIDC_TIMEOUT_CONNECT|SEND|READ` (default: `10000` ms each): timeouts for IdP HTTP calls.
+- `OPENIDC_SSL_VERIFY` (default: `yes`): verify IdP TLS certificates.
+- `OPENIDC_KEEPALIVE` (default: `yes`): keepalive for IdP connections.
+- `OPENIDC_HTTP_PROXY` / `OPENIDC_HTTPS_PROXY`: proxies for IdP calls.
+
+#### Forwarding identity to upstreams
+
+- `OPENIDC_USER_HEADER` (default: `X-User`): header used to pass identity to the upstream (empty disables).
+- `OPENIDC_USER_HEADER_CLAIM` (default: `sub`): claim to extract for the user header value.
+- `OPENIDC_DISPLAY_CLAIM` (default: `preferred_username`): claim used for display in logs/metrics.
+
+#### Caching
+
+- `OPENIDC_DISCOVERY_DICT_SIZE` (default: `1m`): shared dict size for discovery cache.
+- `OPENIDC_JWKS_DICT_SIZE` (default: `1m`): shared dict size for JWKS cache.
+
+!!! tip "Redis session storage"
+    When `USE_REDIS=yes` is configured globally in BunkerWeb, the OpenIDC plugin stores sessions in Redis instead of cookies (with automatic fallback to cookies if Redis becomes unavailable). This is the recommended mode for multi-instance / HA deployments.
+
+### Discovery + JWKS caching
+
+The plugin uses `OPENIDC_DISCOVERY` (the IdP `.well-known/openid-configuration` URL) to discover endpoints, then fetches and caches JWKS keys to validate token signatures.
+
+Discovery and JWKS data are cached in NGINX shared dictionaries. If you have many tenants/IdPs or large key sets, increase:
+
+- `OPENIDC_DISCOVERY_DICT_SIZE` (global)
+- `OPENIDC_JWKS_DICT_SIZE` (global)
+
+### Sessions (cookies vs Redis)
+
+By default, sessions are stored as secure cookies managed by the OpenID Connect library.
+
+If `USE_REDIS=yes` is enabled globally in BunkerWeb and Redis is configured, the plugin automatically switches to **Redis-backed sessions** (with automatic fallback to cookie sessions if Redis is temporarily unavailable). This is recommended for load-balanced / HA deployments and avoids cookie size limits when token payloads are large.
+
+### Forwarding user identity to the upstream
+
+If `OPENIDC_USER_HEADER` is set (default: `X-User`), the plugin injects a header value extracted from a claim (default: `OPENIDC_USER_HEADER_CLAIM=sub`).
+
+Important security behavior:
+
+- The plugin **clears any incoming** header matching `OPENIDC_USER_HEADER` to prevent client-side spoofing.
+- If the configured claim is missing, the header is not set.
+- Set `OPENIDC_USER_HEADER` to an empty value to disable identity forwarding.
+
+!!! tip "Choosing a claim"
+    Prefer stable identifiers that are present in tokens (e.g. `sub`, `email`, `preferred_username`). Claims are read from the ID token first, then from userinfo if present.
+
+### Logout
+
+Logout requests are handled on `OPENIDC_LOGOUT_PATH` (default: `/logout`).
+
+- To revoke tokens at the IdP during logout, set `OPENIDC_REVOKE_TOKENS_ON_LOGOUT=yes`.
+- Use `OPENIDC_REDIRECT_AFTER_LOGOUT_URI` and `OPENIDC_POST_LOGOUT_REDIRECT_URI` to control browser redirects after logout.
+
+### Token endpoint authentication
+
+Most IdPs work with the default `OPENIDC_TOKEN_ENDPOINT_AUTH_METHOD=basic` (client secret in HTTP Basic auth). Advanced methods are also supported:
+
+- `post`
+- `secret_jwt`
+- `private_key_jwt` (requires `OPENIDC_CLIENT_RSA_PRIVATE_KEY`, optional `OPENIDC_CLIENT_RSA_PRIVATE_KEY_ID`)
+
+### Minimal configuration examples
+
+Minimum required settings per protected service:
+
+- `USE_OPENIDC=yes`
+- `OPENIDC_DISCOVERY=...`
+- `OPENIDC_CLIENT_ID=...`
+- `OPENIDC_CLIENT_SECRET=...` (or a JWT key configuration for `private_key_jwt`)
+
+Common hardening/tuning options:
+
+- `OPENIDC_USE_NONCE=yes` (default)
+- `OPENIDC_USE_PKCE=yes`
+- `OPENIDC_IAT_SLACK=...` if you have clock skew
+- `OPENIDC_TIMEOUT_CONNECT|SEND|READ` to match IdP latency
+- `OPENIDC_SSL_VERIFY=yes` (default)
+
+### Troubleshooting
+
+- **403 with "Authentication failed"**: most commonly a wrong discovery URL, a callback URL mismatch on the IdP side, or the IdP being unreachable.
+- **Clock skew / "token not yet valid"**: ensure NTP is enabled; tune `OPENIDC_IAT_SLACK` if needed.
+- **No user header injected**: verify the claim name in `OPENIDC_USER_HEADER_CLAIM` exists in the ID token/userinfo.
+- **Multi-instance deployments**: enable `USE_REDIS=yes` and configure `REDIS_HOST` (or Sentinel) so sessions are shared.

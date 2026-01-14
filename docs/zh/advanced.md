@@ -3936,3 +3936,189 @@ BunkerWeb 模板使用 [lua-resty-template](https://github.com/bungle/lua-resty-
 - **缓存文件**位于 `/var/cache/bunkerweb/custom_pages`；更新源文件就足够了—作业检测到新哈希并自动重新加载 NGINX。
 - **CSP 合规**：始终对内联脚本和样式使用 `nonce_script` 和 `nonce_style` 变量，以确保正确的内容安全策略处理。
 - **测试模板**：您可以在部署到 BunkerWeb 之前使用 Lua 模板引擎在本地渲染测试您的模板。
+
+## OpenID Connect <img src='../../assets/img/pro-icon.svg' alt='crow pro icon' height='24px' width='24px' style="transform : translateY(3px);"> (PRO)
+
+<p align="center">
+  <iframe style="display: block;" width="560" height="315" data-src="https://www.youtube-nocookie.com/embed/0e4lcXTIIfs" title="OpenID Connect" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+</p>
+
+**OpenID Connect** 插件（PRO）通过标准 OAuth 2.0 / OIDC **Authorization Code** 流程，在您的应用前增加单点登录（SSO）。
+
+该插件运行在 BunkerWeb（NGINX/Lua）内部，并在 **access 阶段**强制执行认证，因此未认证请求会在到达上游之前被拦截。
+
+### 请求流程如何工作
+
+当浏览器访问受保护的 URL 时：
+
+1. 若没有有效会话，BunkerWeb 会将用户重定向到身份提供方（IdP）。
+2. IdP 完成用户认证后，会携带授权码重定向回 BunkerWeb 的 `OPENIDC_REDIRECT_URI`（默认：`/callback`）。
+3. BunkerWeb 在 IdP 的 token endpoint 用授权码交换令牌。
+4. 令牌会被校验（issuer、audience、过期时间、`iat` 容差，以及通过 JWKS 校验签名）。
+5. 创建会话并将浏览器重定向回原始 URL。
+
+```mermaid
+sequenceDiagram
+  participant B as 浏览器
+  participant BW as BunkerWeb (OpenIDC)
+  participant IdP as 身份提供方
+  participant Up as 上游
+
+  B->>BW: GET /protected
+  alt 未认证
+  BW-->>B: 302 重定向到 IdP 的 authorize 端点
+  B->>IdP: 授权请求（nonce/PKCE 可选）
+  IdP-->>B: 302 重定向到 /callback?code=...
+  B->>BW: GET /callback?code=...
+  BW->>IdP: Token 请求（授权码交换）
+  IdP-->>BW: ID token + access token（+ refresh token）
+  BW-->>B: 302 重定向回原始 URL
+  end
+  B->>BW: GET /protected（已认证）
+  BW->>Up: 转发请求（+ 可选身份 Header）
+  Up-->>BW: 响应
+  BW-->>B: 响应
+```
+
+!!! warning "回调 URL 必须与 IdP 客户端配置一致"
+    请在 IdP 侧注册完整的回调 URL（协议 + 主机 + 路径）。例如默认配置下为：`https://app.example.com/callback`。
+
+### 设置（说明）
+
+!!! info "必需设置"
+    至少需要配置 `OPENIDC_DISCOVERY` 与 `OPENIDC_CLIENT_ID`，插件才能工作。
+
+#### 基础启用
+
+- `USE_OPENIDC`（默认：`no`）：启用/禁用该站点的 OpenID Connect 认证。
+
+#### 身份提供方（IdP）+ 客户端注册
+
+- `OPENIDC_DISCOVERY`：discovery URL（例如 `https://idp.example.com/.well-known/openid-configuration`）。
+- `OPENIDC_CLIENT_ID`：在 IdP 注册的 OAuth 2.0 客户端 ID。
+- `OPENIDC_CLIENT_SECRET`：OAuth 2.0 客户端密钥（`basic`、`post`、`secret_jwt` 使用）。
+
+#### 回调 / 重定向
+
+- `OPENIDC_REDIRECT_URI`（默认：`/callback`）：IdP 认证完成后回调的路径（必须在 IdP 注册）。
+
+#### Scope 与授权参数
+
+- `OPENIDC_SCOPE`（默认：`openid email profile`）：以空格分隔的 scope 列表。
+- `OPENIDC_AUTHORIZATION_PARAMS`：额外授权参数，使用逗号分隔 `key=value`。
+
+#### 安全加固
+
+- `OPENIDC_USE_NONCE`（默认：`yes`）：在授权请求中加入 nonce。
+- `OPENIDC_USE_PKCE`（默认：`no`）：为 Authorization Code 流程启用 PKCE。
+- `OPENIDC_IAT_SLACK`（默认：`120`）：令牌校验允许的时钟偏差（秒）。
+- `OPENIDC_ACCEPT_UNSUPPORTED_ALG`（默认：`no`）：接受不支持算法签名的令牌（不推荐）。
+- `OPENIDC_FORCE_REAUTHORIZE`（默认：`no`）：每次请求都强制重新授权（仅调试）。
+
+#### 会话/令牌生命周期
+
+- `OPENIDC_REFRESH_SESSION_INTERVAL`：静默重新认证/刷新会话的间隔（秒，空值禁用）。
+- `OPENIDC_ACCESS_TOKEN_EXPIRES_IN`（默认：`3600`）：当 IdP 未返回时使用的 access token 默认有效期。
+- `OPENIDC_RENEW_ACCESS_TOKEN_ON_EXPIRY`（默认：`yes`）：access token 过期时使用 refresh token 自动续期。
+
+#### Token endpoint 认证设置
+
+- `OPENIDC_TOKEN_ENDPOINT_AUTH_METHOD`（默认：`basic`）：`basic`、`post`、`secret_jwt`、`private_key_jwt`。
+- `OPENIDC_CLIENT_RSA_PRIVATE_KEY`：使用 `private_key_jwt` 时必需。
+- `OPENIDC_CLIENT_RSA_PRIVATE_KEY_ID`：`private_key_jwt` 可选 `kid`。
+- `OPENIDC_CLIENT_JWT_ASSERTION_EXPIRES_IN`：JWT 断言有效期（秒）。
+
+#### 登出行为
+
+- `OPENIDC_LOGOUT_PATH`（默认：`/logout`）：由 BunkerWeb 处理的本地登出路径。
+- `OPENIDC_REVOKE_TOKENS_ON_LOGOUT`（默认：`no`）：登出时在 IdP 侧吊销令牌。
+- `OPENIDC_REDIRECT_AFTER_LOGOUT_URI`：本地登出后的跳转（空值使用 IdP 默认行为）。
+- `OPENIDC_POST_LOGOUT_REDIRECT_URI`：IdP 登出完成后的跳转（若 IdP 支持）。
+
+#### 到 IdP 的连接与 TLS
+
+- `OPENIDC_TIMEOUT_CONNECT|SEND|READ`（默认：每项 `10000` ms）：访问 IdP 的 HTTP 超时。
+- `OPENIDC_SSL_VERIFY`（默认：`yes`）：校验 IdP TLS 证书。
+- `OPENIDC_KEEPALIVE`（默认：`yes`）：IdP 连接 keepalive。
+- `OPENIDC_HTTP_PROXY` / `OPENIDC_HTTPS_PROXY`：访问 IdP 的代理配置。
+
+#### 向上游传递身份
+
+- `OPENIDC_USER_HEADER`（默认：`X-User`）：传递到上游的身份 header（空值禁用）。
+- `OPENIDC_USER_HEADER_CLAIM`（默认：`sub`）：用于生成 header 值的 claim。
+- `OPENIDC_DISPLAY_CLAIM`（默认：`preferred_username`）：用于日志/指标展示的 claim。
+
+#### 缓存
+
+- `OPENIDC_DISCOVERY_DICT_SIZE`（默认：`1m`）：discovery 缓存的 shared dict 大小。
+- `OPENIDC_JWKS_DICT_SIZE`（默认：`1m`）：JWKS 缓存的 shared dict 大小。
+
+!!! tip "Redis 会话存储"
+    当全局配置 `USE_REDIS=yes` 且 Redis 可用时，OpenIDC 插件会把会话存储到 Redis 而不是 Cookie（若 Redis 暂不可用会自动回退到 Cookie）。这是多实例/高可用部署的推荐模式。
+
+### Discovery + JWKS 缓存
+
+插件通过 `OPENIDC_DISCOVERY`（IdP 的 `.well-known/openid-configuration`）发现各端点，然后获取并缓存 JWKS，用于校验令牌签名。
+
+Discovery/JWKS 数据会缓存在 NGINX shared dict 中。如果您有很多租户/IdP 或非常大的密钥集合，可增大：
+
+- `OPENIDC_DISCOVERY_DICT_SIZE`（global）
+- `OPENIDC_JWKS_DICT_SIZE`（global）
+
+### 会话（Cookie vs Redis）
+
+默认情况下，会话以安全 Cookie 的形式存储，由 OpenID Connect 库管理。
+
+当 `USE_REDIS=yes` 且 Redis 配置正确时，插件会自动切换为 **Redis 会话**（Redis 临时不可用时会自动回退到 Cookie）。推荐用于负载均衡/高可用场景，并可避免令牌较大时的 Cookie 大小限制。
+
+### 向上游传递用户身份
+
+如果设置了 `OPENIDC_USER_HEADER`（默认：`X-User`），插件会从某个 claim 中提取值注入到 header（默认：`OPENIDC_USER_HEADER_CLAIM=sub`）。
+
+重要的安全行为：
+
+- 插件会**清除所有传入**的同名 header（`OPENIDC_USER_HEADER`），防止客户端伪造。
+- 如果找不到配置的 claim，则不会设置 header。
+- 将 `OPENIDC_USER_HEADER` 设为空值可禁用身份传递。
+
+!!! tip "选择 claim"
+    优先使用令牌中稳定存在的标识（例如 `sub`、`email`、`preferred_username`）。claim 先从 ID token 读取，不存在时再从 userinfo 读取（若有）。
+
+### 登出
+
+登出请求在 `OPENIDC_LOGOUT_PATH`（默认：`/logout`）处理。
+
+- 如需登出时在 IdP 侧吊销令牌，请设置 `OPENIDC_REVOKE_TOKENS_ON_LOGOUT=yes`。
+- 使用 `OPENIDC_REDIRECT_AFTER_LOGOUT_URI` 与 `OPENIDC_POST_LOGOUT_REDIRECT_URI` 控制登出后的跳转。
+
+### Token endpoint 认证
+
+大多数 IdP 使用默认的 `OPENIDC_TOKEN_ENDPOINT_AUTH_METHOD=basic`（HTTP Basic 携带 client secret）即可工作。也支持：
+
+- `post`
+- `secret_jwt`
+- `private_key_jwt`（需要 `OPENIDC_CLIENT_RSA_PRIVATE_KEY`，可选 `OPENIDC_CLIENT_RSA_PRIVATE_KEY_ID`）
+
+### 最小配置示例
+
+每个受保护服务至少需要：
+
+- `USE_OPENIDC=yes`
+- `OPENIDC_DISCOVERY=...`
+- `OPENIDC_CLIENT_ID=...`
+- `OPENIDC_CLIENT_SECRET=...`（或 `private_key_jwt` 的 JWT 密钥配置）
+
+常见的加固/调优选项：
+
+- `OPENIDC_USE_NONCE=yes`（默认）
+- `OPENIDC_USE_PKCE=yes`
+- 若存在时钟偏差，调整 `OPENIDC_IAT_SLACK=...`
+- 根据 IdP 延迟调整 `OPENIDC_TIMEOUT_CONNECT|SEND|READ`
+- `OPENIDC_SSL_VERIFY=yes`（默认）
+
+### 故障排除
+
+- **403 且显示 "Authentication failed"**：常见原因是 discovery URL 错误、IdP 侧回调 URL 不匹配或 IdP 不可达。
+- **时钟偏差 / "token not yet valid"**：确保启用 NTP；必要时调整 `OPENIDC_IAT_SLACK`。
+- **未注入用户 header**：确认 `OPENIDC_USER_HEADER_CLAIM` 指定的 claim 在 ID token/userinfo 中存在。
+- **多实例部署**：启用 `USE_REDIS=yes` 并配置 `REDIS_HOST`（或 Sentinel）以共享会话。
