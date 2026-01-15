@@ -3,6 +3,7 @@
 ## v1.6.8~rc1 - 2026/01/??
 
 - [BUGFIX] Fix Redis database selection in web UI and bwcli by renaming `REDIS_DB` to `REDIS_DATABASE` when fetching the settings
+- [LINUX] Check the installation type in the easy-install script to avoid issues when upgrading from an older version and the installation type is not `all-in-one` or `manager`
 - [DEPS] Update coreruleset-v3 version to v3.3.8
 - [DEPS] Update coreruleset-v4 version to v4.22.0
 - [DEPS] Updated luajit2 version to v2.1-20260114
