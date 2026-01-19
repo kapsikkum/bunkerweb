@@ -510,7 +510,7 @@ class Database:
         """Get the metadata from the database"""
         data = {
             "is_initialized": False,
-            "is_pro": "no",
+            "is_pro": False,
             "pro_license": "",
             "pro_expire": None,
             "pro_status": "invalid",
