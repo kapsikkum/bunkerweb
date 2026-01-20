@@ -6,6 +6,7 @@
 - [FEATURE] Add `GoDaddy` as a DNS provider in the `letsencrypt` plugin
 - [FEATURE] Add `TransIP` as a DNS provider in the `letsencrypt` plugin
 - [BUGFIX] Fix robots.txt and list-based plugins (greylist/whitelist/blacklist/dnsbl) appending duplicate entries on subsequent requests by creating deep copies of internalstore data instead of using shared references
+- [UI] Add security mode in services table
 - [DEPS] Updated lua-cjson version to v2.1.0.16
 
 ## v1.6.8~rc1 - 2026/01/19

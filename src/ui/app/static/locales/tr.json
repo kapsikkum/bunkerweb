@@ -978,6 +978,10 @@
     "permanent": "Kalıcı",
     "service_specific": "Servise özel"
   },
+  "security_mode": {
+    "block": "Engelle",
+    "detect": "Tespit Et"
+  },
   "searchpane": {
     "active": "Aktif",
     "async": "Asenkron",
@@ -1606,6 +1610,7 @@
         "last_update": "Servisin en son güncellendiği tarih ve saati",
         "method": "Servisin oluşturulma yöntemi (örn. ui, dosya)",
         "name": "Servisin adı",
+        "security_mode": "Hizmetin güvenlik modu (Engelle veya Tespit Et)",
         "select_all": "Tüm Servisleri Seç",
         "template": "Hizmet tarafından kullanılan şablon",
         "type": "Servis Türü (Çevrimiçi/Taslak)"

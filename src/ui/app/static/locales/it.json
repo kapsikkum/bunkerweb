@@ -978,6 +978,10 @@
     "permanent": "Permanente",
     "service_specific": "Specifico del servizio"
   },
+  "security_mode": {
+    "block": "Blocca",
+    "detect": "Rileva"
+  },
   "searchpane": {
     "active": "Attivo",
     "async": "Asincrono",
@@ -1619,6 +1623,7 @@
         "last_update": "Data e ora dell'ultimo aggiornamento del Servizio",
         "method": "Metodo di creazione del Servizio (es. ui, file)",
         "name": "Nome Servizio",
+        "security_mode": "La modalità di sicurezza del servizio (Blocca o Rileva)",
         "select_all": "Seleziona tutti i Servizi",
         "template": "Il template utilizzato dal Servizio",
         "type": "Tipo di Servizio (Online/Bozza)"

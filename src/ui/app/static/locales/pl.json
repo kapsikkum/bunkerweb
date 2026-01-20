@@ -990,6 +990,10 @@
     "permanent": "Stałe",
     "service_specific": "Specyficzne dla usługi"
   },
+  "security_mode": {
+    "block": "Blokuj",
+    "detect": "Wykryj"
+  },
   "searchpane": {
     "active": "Aktywne",
     "async": "Asymetryczne",
@@ -1639,6 +1643,7 @@
         "last_update": "Data i godzina ostatniej aktualizacji Usługi",
         "method": "Metoda tworzenia Usługi (np. interfejs użytkownika, plik)",
         "name": "Nazwa usługi",
+        "security_mode": "Tryb bezpieczeństwa usługi (Blokuj lub Wykryj)",
         "select_all": "Wybierz wszystkie usługi",
         "template": "Szablon używany przez Usługę",
         "type": "Typ usługi (Online/Szkic)"

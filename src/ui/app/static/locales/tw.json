@@ -983,6 +983,10 @@
     "permanent": "永久",
     "service_specific": "特定服務"
   },
+  "security_mode": {
+    "block": "封鎖",
+    "detect": "偵測"
+  },
   "searchpane": {
     "active": "啟用中",
     "async": "非同步",
@@ -1627,6 +1631,7 @@
         "last_update": "服務最後更新的日期和時間",
         "method": "服務的建立方法（例如，ui, file）",
         "name": "服務的名稱",
+        "security_mode": "服務的安全模式（封鎖或偵測）",
         "select_all": "選擇所有服務",
         "template": "服務使用的範本",
         "type": "服務類型 (線上/草稿)"

@@ -990,6 +990,10 @@
     "permanent": "Permanent",
     "service_specific": "Service-specific"
   },
+  "security_mode": {
+    "block": "Block",
+    "detect": "Detect"
+  },
   "searchpane": {
     "active": "Active",
     "async": "Async",
@@ -1640,6 +1644,7 @@
         "method": "Creation method of the Service (e.g., ui, file)",
         "name": "Name of the Service",
         "select_all": "Select all Services",
+        "security_mode": "The Service's security mode (Block or Detect)",
         "template": "The template used by the Service",
         "type": "Service type (Online/Draft)"
       }

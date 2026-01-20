@@ -56,6 +56,12 @@
                     </th>
                     <th data-bs-toggle="tooltip"
                         data-bs-placement="bottom"
+                        data-bs-original-title="The Service's security mode (Block or Detect)"
+                        data-i18n="tooltip.table.services.security_mode">
+                        <span data-i18n="table.header.security_mode">Security Mode</span>
+                    </th>
+                    <th data-bs-toggle="tooltip"
+                        data-bs-placement="bottom"
                         data-bs-original-title="The template used by the Service"
                         data-i18n="tooltip.table.services.template">
                         <span data-i18n="table.header.template">Template</span>
@@ -96,16 +102,29 @@
                             {% if service['is_draft'] %}
                                 <span id="type-{{ service['id'].replace('.', '-') }}"
                                       data-value="draft"
-                                      class="badge rounded-pill bg-label-secondary"
-                                      data-i18n="status.draft">Draft</span>
+                                      class="badge rounded-pill bg-label-secondary d-inline-flex align-items-center">
+                                    <i class="bx bx-file-blank me-1"></i><span data-i18n="status.draft">Draft</span>
+                                </span>
                             {% else %}
                                 <span id="type-{{ service['id'].replace('.', '-') }}"
                                       data-value="online"
-                                      class="badge rounded-pill bg-label-primary"
-                                      data-i18n="status.online">Online</span>
+                                      class="badge rounded-pill bg-label-primary d-inline-flex align-items-center">
+                                    <i class="bx bx-globe me-1"></i><span data-i18n="status.online">Online</span>
+                                </span>
                             {% endif %}
                         </td>
                         <td id="method-{{ service['id'].replace('.', '-') }}">{{ service["method"] }}</td>
+                        <td>
+                            {% if service['security_mode'] == 'detect' %}
+                                <span class="badge rounded-pill bg-label-warning d-inline-flex align-items-center">
+                                    <i class="bx bx-show me-1"></i><span data-i18n="security_mode.detect">Detect</span>
+                                </span>
+                            {% else %}
+                                <span class="badge rounded-pill bg-label-primary d-inline-flex align-items-center">
+                                    <i class="bx bx-shield-alt-2 me-1"></i><span data-i18n="security_mode.block">Block</span>
+                                </span>
+                            {% endif %}
+                        </td>
                         <td>
                             {% if service["template"] %}
                                 <a href="{{ url_for("templates") }}/{{ service["template"] }}"

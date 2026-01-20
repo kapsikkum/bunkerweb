@@ -987,6 +987,10 @@
     "permanent": "Dauerhaft",
     "service_specific": "Dienstspezifisch"
   },
+  "security_mode": {
+    "block": "Blockieren",
+    "detect": "Erkennen"
+  },
   "searchpane": {
     "active": "Aktiv",
     "async": "Asynchron",
@@ -1640,6 +1644,7 @@
         "last_update": "Datum und Uhrzeit der letzten Aktualisierung des Dienstes",
         "method": "Erstellungsmethode des Dienstes (z. B. ui, file)",
         "name": "Name des Dienstes",
+        "security_mode": "Der Sicherheitsmodus des Dienstes (Blockieren oder Erkennen)",
         "select_all": "Alle Dienste auswählen",
         "template": "Die vom Dienst verwendete Vorlage",
         "type": "Diensttyp (Online/Entwurf)"

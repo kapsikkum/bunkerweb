@@ -978,6 +978,10 @@
     "permanent": "永久",
     "service_specific": "特定服务"
   },
+  "security_mode": {
+    "block": "阻止",
+    "detect": "检测"
+  },
   "searchpane": {
     "active": "活动",
     "async": "异步",
@@ -1621,6 +1625,7 @@
         "last_update": "服务最后更新的日期和时间",
         "method": "服务的创建方法（例如，ui, file）",
         "name": "服务的名称",
+        "security_mode": "服务的安全模式（阻止或检测）",
         "select_all": "选择所有服务",
         "template": "服务使用的模板",
         "type": "服务类型（在线/草稿）"

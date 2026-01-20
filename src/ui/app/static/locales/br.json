@@ -987,6 +987,10 @@
     "permanent": "Permanente",
     "service_specific": "Específico do serviço"
   },
+  "security_mode": {
+    "block": "Bloquear",
+    "detect": "Detectar"
+  },
   "searchpane": {
     "active": "Ativo",
     "async": "Assíncrono",
@@ -1637,6 +1641,7 @@
         "last_update": "Data e hora da última atualização do Serviço",
         "method": "Método de criação do Serviço (ex. ui, file)",
         "name": "Nome do Serviço",
+        "security_mode": "O modo de segurança do Serviço (Bloquear ou Detectar)",
         "select_all": "Selecionar todos os Serviços",
         "template": "O modelo usado pelo Serviço",
         "type": "Tipo de Serviço (Online/Rascunho)"

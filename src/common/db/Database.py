@@ -63,7 +63,7 @@ from sqlalchemy.exc import (
     SAWarning,
     SQLAlchemyError,
 )
-from sqlalchemy.orm import joinedload, scoped_session, sessionmaker
+from sqlalchemy.orm import joinedload, scoped_session, sessionmaker, aliased
 from sqlalchemy.pool import QueuePool
 from sqlite3 import Connection as SQLiteConnection
 
@@ -2621,18 +2621,23 @@ class Database:
         """Get the services from the database"""
         services = []
         with self._db_session() as session:
-            # Fetch all services with their USE_TEMPLATE setting in a single optimized query
+            # Fetch all services with their USE_TEMPLATE and SECURITY_MODE settings in a single optimized query
             # This avoids N+1 query problem when loading many services
+            template_alias = aliased(Services_settings)
+            security_mode_alias = aliased(Services_settings)
+
             query = (
                 session.query(Services)
-                .outerjoin(Services_settings, (Services.id == Services_settings.service_id) & (Services_settings.setting_id == "USE_TEMPLATE"))
+                .outerjoin(template_alias, (Services.id == template_alias.service_id) & (template_alias.setting_id == "USE_TEMPLATE"))
+                .outerjoin(security_mode_alias, (Services.id == security_mode_alias.service_id) & (security_mode_alias.setting_id == "SECURITY_MODE"))
                 .with_entities(
                     Services.id,
                     Services.method,
                     Services.is_draft,
                     Services.creation_date,
                     Services.last_update,
-                    Services_settings.value.label("template"),
+                    template_alias.value.label("template"),
+                    security_mode_alias.value.label("security_mode"),
                 )
             )
 
@@ -2650,6 +2655,7 @@ class Database:
                     "creation_date": service.creation_date,
                     "last_update": service.last_update,
                     "template": service.template or "",
+                    "security_mode": service.security_mode or "block",
                 }
             )
 
