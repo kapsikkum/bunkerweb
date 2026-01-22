@@ -10,6 +10,7 @@
 - [UI] Add security mode in services table
 - [UI] Implement services import functionality with drag-and-drop support
 - [DEPS] Updated lua-cjson version to v2.1.0.16
+- [CONTRIBUTION] Thank you [rayshoo](https://github.com/rayshoo) for your contribution regarding the `Korean` translation of the web UI.
 
 ## v1.6.8~rc1 - 2026/01/19
 
