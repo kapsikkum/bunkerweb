@@ -635,7 +635,7 @@ with app.app_context():
     def custom_url_for(endpoint, **values):
         if endpoint:
             try:
-                if endpoint not in ("static", "index", "loading", "check", "check_reloading") and "_page" not in endpoint:
+                if endpoint not in ("static", "index", "loading", "check", "check_reloading") and not endpoint.endswith("_page"):
                     return url_for(f"{endpoint}.{endpoint}_page", **values)
                 return url_for(endpoint, **values)
             except BuildError as e:
