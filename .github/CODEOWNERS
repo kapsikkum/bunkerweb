@@ -18,3 +18,4 @@ Dockerfile* @TheophileDiot
 # Contributors for specific directories/files
 src/ui/app/static/locales/tr.json @wiseweb-works
 src/ui/app/static/locales/pl.json @tomkolp
+src/ui/app/static/locales/ko.json @rayshoo
