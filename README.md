@@ -36,6 +36,8 @@
 	 &#124;
 	📝 <a href="https://github.com/bunkerity/bunkerweb/discussions">Forum</a>
 	 &#124;
+	📝 <a href="https://community.bunkerweb.io/?utm_campaign=self&utm_source=github">Community</a>
+	 &#124;
 	🗺️ <a href="https://www.bunkerweb.io/threatmap/?utm_campaign=self&utm_source=github">Threatmap</a>
 	&#124;
 	📊 <a href="https://status.bunkerweb.io/?utm_campaign=self&utm_source=github">Status</a>
