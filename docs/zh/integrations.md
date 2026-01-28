@@ -2753,7 +2753,7 @@ autoconf 服务充当一个 [Ingress 控制器](https://kubernetes.io/docs/conce
 
 此外，**在使用 Kubernetes 集成时，将 `KUBERNETES_MODE` 环境变量设置为 `yes` 至关重要**。此变量是正常运行所必需的。
 
-### 安装方法
+### 安装方法 {#kubernetes-installation}
 
 #### 使用 helm chart（推荐）
 
@@ -3607,6 +3607,512 @@ spec:
 ```
 
 您可以访问 `http(s)://myapp.example.com`，现在它已受到 BunkerWeb 的保护 🛡️
+
+
+### 从 nginx ingress 控制器迁移 {#migrate-from-nginx-ingress-controller}
+
+#### 简介
+
+本实用指南将引导您将 **NGINX Ingress** 资源迁移到 **BunkerWeb**。它专注于转换您现有的 Kubernetes 清单，并提供使用示例。
+
+**前提条件**：BunkerWeb 必须安装在您的集群中（参见[安装方法](#kubernetes-installation)）。
+
+#### 迁移策略
+
+推荐方法：_共存_
+
+1. **并行安装 BunkerWeb** 与 NGINX Ingress
+2. **复制您的 Ingress** 使用 `bunkerweb` 类
+3. **测试** BunkerWeb LoadBalancer IP
+4. **切换 DNS** 验证通过后
+5. **删除** 旧的 NGINX Ingress 资源
+
+#### 迁移工作流
+
+```bash
+# 1. 备份当前的 Ingress
+kubectl get ingress --all-namespaces -o yaml > nginx-ingress-backup.yaml
+
+# 2. 转换并创建新的 BunkerWeb Ingress
+kubectl apply -f bunkerweb-ingress.yaml
+
+# 3. 使用 BunkerWeb IP 测试
+BUNKERWEB_IP=$(kubectl get svc -n bunkerweb bunkerweb-external -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
+curl -H "Host: your-domain.com" http://$BUNKERWEB_IP
+
+# 4. 验证通过后，切换 DNS 然后删除旧的
+kubectl delete ingress <old-ingress> -n <namespace>
+```
+
+---
+
+#### 示例 1：标准 Ingress
+
+##### 场景
+
+通过 cert-manager 实现自动 HTTPS 的简单 Web 应用程序。
+
+=== "NGINX Ingress"
+
+    ```yaml title="nginx-ingress.yaml"
+    apiVersion: networking.k8s.io/v1
+    kind: Ingress
+    metadata:
+      name: webapp-ingress
+      namespace: production
+      annotations:
+        kubernetes.io/ingress.class: "nginx"
+        cert-manager.io/cluster-issuer: "letsencrypt-prod"
+    spec:
+      tls:
+      - hosts:
+        - webapp.example.com
+        secretName: webapp-tls
+      rules:
+      - host: webapp.example.com
+        http:
+          paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: webapp-service
+                port:
+                  number: 80
+    ```
+
+=== "BunkerWeb Ingress"
+
+    ```yaml title="bunkerweb-ingress.yaml"
+    apiVersion: networking.k8s.io/v1
+    kind: Ingress
+    metadata:
+      name: webapp-ingress
+      namespace: production
+      annotations:
+        # BunkerWeb 自动 Let's Encrypt（cert-manager 的替代方案）
+        bunkerweb.io/AUTO_LETS_ENCRYPT: "yes"
+        bunkerweb.io/EMAIL_LETS_ENCRYPT: "admin@example.com"
+        
+        # 或保留 cert-manager（注释掉上面的 AUTO_LETS_ENCRYPT）
+        # cert-manager.io/cluster-issuer: "letsencrypt-prod"
+    spec:
+      ingressClassName: bunkerweb  # 主要变化：Ingress 类
+      tls:
+      - hosts:
+        - webapp.example.com
+        secretName: webapp-tls
+      rules:
+      - host: webapp.example.com
+        http:
+          paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: webapp-service
+                port:
+                  number: 80
+    ```
+
+##### 关键差异
+
+| 方面 | NGINX | BunkerWeb |
+|--------|-------|-----------|
+| Ingress 类 | `kubernetes.io/ingress.class` 注解 | `ingressClassName` 字段 |
+| SSL 证书 | 需要 cert-manager | cert-manager 或内置 Let's Encrypt |
+| 安全性 | 默认无 | 默认启用 WAF |
+
+---
+
+#### 示例 2：带注解的 Ingress
+
+##### 场景
+
+具有速率限制、CORS、HTTPS 重定向和超时配置的 REST API。
+
+=== "NGINX Ingress"
+
+    ```yaml title="nginx-ingress.yaml"
+    apiVersion: networking.k8s.io/v1
+    kind: Ingress
+    metadata:
+      name: api-ingress
+      namespace: production
+      annotations:
+        kubernetes.io/ingress.class: "nginx"
+        cert-manager.io/cluster-issuer: "letsencrypt-prod"
+        
+        # HTTPS 重定向
+        nginx.ingress.kubernetes.io/ssl-redirect: "true"
+        nginx.ingress.kubernetes.io/force-ssl-redirect: "true"
+        
+        # CORS
+        nginx.ingress.kubernetes.io/enable-cors: "true"
+        nginx.ingress.kubernetes.io/cors-allow-origin: "https://app.example.com,https://admin.example.com"
+        nginx.ingress.kubernetes.io/cors-allow-methods: "GET, POST, PUT, DELETE, OPTIONS"
+        nginx.ingress.kubernetes.io/cors-allow-credentials: "true"
+        
+        # 速率限制
+        nginx.ingress.kubernetes.io/limit-rps: "20"
+        nginx.ingress.kubernetes.io/limit-burst-multiplier: "5"
+        
+        # 超时和大小
+        nginx.ingress.kubernetes.io/proxy-connect-timeout: "10"
+        nginx.ingress.kubernetes.io/proxy-send-timeout: "60"
+        nginx.ingress.kubernetes.io/proxy-read-timeout: "60"
+        nginx.ingress.kubernetes.io/proxy-body-size: "20m"
+        
+        # 请求头
+        nginx.ingress.kubernetes.io/proxy-set-headers: "custom-headers"
+    spec:
+      tls:
+      - hosts:
+        - api.example.com
+        secretName: api-tls
+      rules:
+      - host: api.example.com
+        http:
+          paths:
+          - path: /v1
+            pathType: Prefix
+            backend:
+              service:
+                name: api-service
+                port:
+                  number: 8080
+    ```
+
+=== "BunkerWeb Ingress"
+
+    ```yaml title="bunkerweb-ingress.yaml"
+    apiVersion: networking.k8s.io/v1
+    kind: Ingress
+    metadata:
+      name: api-ingress
+      namespace: production
+      annotations:
+        # 自动 SSL
+        bunkerweb.io/AUTO_LETS_ENCRYPT: "yes"
+        bunkerweb.io/EMAIL_LETS_ENCRYPT: "admin@example.com"
+        
+        # HTTPS 重定向
+        bunkerweb.io/REDIRECT_HTTP_TO_HTTPS: "yes"
+        
+        # CORS
+        bunkerweb.io/USE_CORS: "yes"
+        bunkerweb.io/CORS_ALLOW_ORIGIN: "^https://(app|admin).example.com$"
+        bunkerweb.io/CORS_ALLOW_METHODS: "GET, POST, PUT, DELETE, OPTIONS"
+        bunkerweb.io/CORS_ALLOW_CREDENTIALS: "yes"
+        
+        # 速率限制
+        bunkerweb.io/USE_LIMIT_REQ: "yes"
+        bunkerweb.io/LIMIT_REQ_URL: "/"
+        bunkerweb.io/LIMIT_REQ_RATE: "20r/s"
+        
+        # 超时
+        bunkerweb.io/REVERSE_PROXY_CONNECT_TIMEOUT: "10s"
+        bunkerweb.io/REVERSE_PROXY_SEND_TIMEOUT: "60s"
+        bunkerweb.io/REVERSE_PROXY_READ_TIMEOUT: "60s"
+        
+        # 最大请求体大小
+        bunkerweb.io/MAX_CLIENT_SIZE: "20m"
+        
+        # 自定义请求头
+        bunkerweb.io/CUSTOM_HEADER: "X-API-Version: v1"
+        
+        # 额外的安全性（BunkerWeb 附加功能）
+        bunkerweb.io/USE_MODSECURITY: "yes"
+        bunkerweb.io/USE_BAD_BEHAVIOR: "yes"
+    spec:
+      ingressClassName: bunkerweb
+      tls:
+      - hosts:
+        - api.example.com
+        secretName: api-tls
+      rules:
+      - host: api.example.com
+        http:
+          paths:
+          - path: /v1
+            pathType: Prefix
+            backend:
+              service:
+                name: api-service
+                port:
+                  number: 8080
+    ```
+
+##### 注解转换
+
+| 功能 | NGINX Ingress | BunkerWeb Ingress |
+|----------------|---------------|-------------------|
+| HTTPS 重定向 | `ssl-redirect: "true"` | `REDIRECT_HTTP_TO_HTTPS: "yes"` |
+| 启用 CORS | `enable-cors: "true"` | `USE_CORS: "yes"` |
+| CORS 来源 | `cors-allow-origin: "https://..."` | `CORS_ALLOW_ORIGIN: "^https://..."`（PCRE 正则表达式或 `*` 或 `self`） |
+| CORS 方法 | `cors-allow-methods: "GET, POST"` | `CORS_ALLOW_METHODS: "GET, POST"` |
+| 速率限制 | `limit-rps: "20"` | `USE_LIMIT_REQ: "yes"` + `LIMIT_REQ_URL: "/"` + `LIMIT_REQ_RATE: "20r/s"` |
+| 超时 | `proxy-*-timeout: "60"` | `REVERSE_PROXY_*_TIMEOUT: "60s"` |
+| 请求体大小 | `proxy-body-size: "20m"` | `MAX_CLIENT_SIZE: "20m"` |
+| 自定义请求头 | `proxy-set-headers: "custom-headers"` | `CUSTOM_HEADER: "Header-Name: value"`（多个注解可设置多个请求头） |
+| 安全性 | 无 | `USE_MODSECURITY: "yes"` + `USE_BAD_BEHAVIOR: "yes"` |
+
+---
+
+#### 示例 3：带自定义 NGINX 配置的 Ingress
+
+##### 场景
+
+通过 `configuration-snippet` 使用自定义 NGINX 规则的应用程序：复杂的重写规则、身份验证、特殊请求头。
+
+=== "NGINX Ingress"
+
+    ```yaml title="nginx-ingress.yaml"
+    apiVersion: networking.k8s.io/v1
+    kind: Ingress
+    metadata:
+      name: custom-app-ingress
+      namespace: production
+      annotations:
+        kubernetes.io/ingress.class: "nginx"
+        cert-manager.io/cluster-issuer: "letsencrypt-prod"
+        
+        # 基本身份验证
+        nginx.ingress.kubernetes.io/auth-type: basic
+        nginx.ingress.kubernetes.io/auth-secret: basic-auth
+        nginx.ingress.kubernetes.io/auth-realm: "Authentication Required"
+        
+        # IP 白名单
+        nginx.ingress.kubernetes.io/whitelist-source-range: "10.0.0.0/8,172.16.0.0/12"
+        
+        # 通过代码片段自定义配置
+        nginx.ingress.kubernetes.io/configuration-snippet: |
+          # 自定义重写
+          rewrite ^/old-path/(.*)$ /new-path/$1 permanent;
+          
+          # 条件请求头
+          if ($request_uri ~* ^/api/) {
+            add_header X-API-Gateway "true";
+          }
+          
+          # 阻止某些用户代理
+          if ($http_user_agent ~* (bot|crawler|spider)) {
+            return 403;
+          }
+          
+          # 资源缓存
+          location ~* \.(jpg|jpeg|png|gif|ico|css|js)$ {
+            expires 7d;
+            add_header Cache-Control "public, immutable";
+          }
+          
+          # 并发连接限制
+          limit_conn addr 10;
+          
+          # 代理到外部服务的路径
+          location /external-api {
+            proxy_pass https://external-service.com;
+            proxy_set_header Host external-service.com;
+          }
+    spec:
+      tls:
+      - hosts:
+        - custom-app.example.com
+        secretName: custom-app-tls
+      rules:
+      - host: custom-app.example.com
+        http:
+          paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: custom-app-service
+                port:
+                  number: 80
+
+    ---
+    # 身份验证的 ConfigMap
+    apiVersion: v1
+    kind: Secret
+    metadata:
+      name: basic-auth
+      namespace: production
+    type: Opaque
+    data:
+      auth: dXNlcjokYXByMSRIRzJLbkZNTyR5ZnBmRUxYVXFTSGg0ME5pRC8uNGcuCg==  # user:password
+    ```
+
+=== "BunkerWeb Ingress"
+
+    <!-- ###### 选项 A：使用 BunkerWeb 原生功能 -->
+
+    ```yaml title="bunkerweb-ingress.yaml"
+    apiVersion: networking.k8s.io/v1
+    kind: Ingress
+    metadata:
+      name: custom-app-ingress
+      namespace: production
+      annotations:
+        # SSL
+        bunkerweb.io/AUTO_LETS_ENCRYPT: "yes"
+        bunkerweb.io/EMAIL_LETS_ENCRYPT: "admin@example.com"
+        
+        # 基本身份验证（BunkerWeb 原生）
+        bunkerweb.io/USE_AUTH_BASIC: "yes"
+        bunkerweb.io/AUTH_BASIC_LOCATION: "sitewide" # 或 "/secure" 或 "^~ /admin/"
+        bunkerweb.io/AUTH_BASIC_USER: "user"
+        bunkerweb.io/AUTH_BASIC_PASSWORD: "password"  # 或使用 Secret
+        bunkerweb.io/AUTH_BASIC_USER_1: "user1"
+        bunkerweb.io/AUTH_BASIC_PASSWORD_1: "otherpassword"  # 或使用 Secret
+        bunkerweb.io/AUTH_BASIC_TEXT: "Authentication Required"
+        
+        # IP 白名单（BunkerWeb 原生）
+        bunkerweb.io/WHITELIST_IP: "10.0.0.0/8 172.16.0.0/12"
+        
+        # User-Agent 阻止（BunkerWeb 原生）
+        bunkerweb.io/USE_BAD_BEHAVIOR: "yes"
+        bunkerweb.io/BLACKLIST_USER_AGENT: "bot crawler spider" # 或 PCRE 正则
+        
+        # 缓存（BunkerWeb 原生）
+        bunkerweb.io/USE_CLIENT_CACHE: "yes"
+        bunkerweb.io/CLIENT_CACHE_EXTENSIONS: "jpg|jpeg|png|bmp|ico|svg|tif|css|js|otf|ttf|eot|woff|woff2"
+        bunkerweb.io/CLIENT_CACHE_CONTROL: "public, max-age=15552000" # Cache-Control HTTP 请求头的值
+        bunkerweb.io/CLIENT_CACHE_ETAG: "yes" # 启用 ETag 请求头
+        
+        # 连接限制
+        bunkerweb.io/USE_LIMIT_CONN: "yes"
+        bunkerweb.io/LIMIT_CONN_MAX_HTTP1: "10"
+        bunkerweb.io/LIMIT_CONN_MAX_HTTP2: "100"
+        bunkerweb.io/LIMIT_CONN_MAX_HTTP3: "100"
+    spec:
+      ingressClassName: bunkerweb
+      tls:
+      - hosts:
+        - custom-app.example.com
+        secretName: custom-app-tls
+      rules:
+      - host: custom-app.example.com
+        http:
+          paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: custom-app-service
+                port:
+                  number: 80
+    ```
+
+=== "BunkerWeb Ingress + ConfigMap"
+
+    <!-- ###### 选项 B：使用 ConfigMap 进行自定义配置 -->
+
+    对于没有直接等效的规则（复杂重写、外部代理），使用 ConfigMap：
+
+    ```yaml title="bunkerweb-ingress-configmap.yaml"
+    apiVersion: networking.k8s.io/v1
+    kind: Ingress
+    metadata:
+      name: custom-app-ingress
+      namespace: production
+      annotations:
+        bunkerweb.io/AUTO_LETS_ENCRYPT: "yes"
+        bunkerweb.io/EMAIL_LETS_ENCRYPT: "admin@example.com"
+        
+        # 原生功能
+        bunkerweb.io/USE_AUTH_BASIC: "yes"
+        bunkerweb.io/AUTH_BASIC_LOCATION: "sitewide" # 或 "/secure" 或 "^~ /admin/"
+        bunkerweb.io/AUTH_BASIC_USER: "user"
+        bunkerweb.io/AUTH_BASIC_PASSWORD: "password"  # 或使用 Secret
+        bunkerweb.io/AUTH_BASIC_USER_1: "user1"
+        bunkerweb.io/AUTH_BASIC_PASSWORD_1: "otherpassword"  # 或使用 Secret
+        bunkerweb.io/AUTH_BASIC_TEXT: "Authentication Required"
+
+        bunkerweb.io/WHITELIST_IP: "10.0.0.0/8 172.16.0.0/12"
+
+        bunkerweb.io/USE_BAD_BEHAVIOR: "yes"
+
+        bunkerweb.io/BLACKLIST_USER_AGENT: "bot crawler spider" # 或 PCRE 正则
+    spec:
+      ingressClassName: bunkerweb
+      tls:
+      - hosts:
+        - custom-app.example.com
+        secretName: custom-app-tls
+      rules:
+      - host: custom-app.example.com
+        http:
+          paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: custom-app-service
+                port:
+                  number: 80
+
+    ---
+    # 自定义 NGINX 配置的 ConfigMap
+    apiVersion: v1
+    kind: ConfigMap
+    metadata:
+      name: custom-app-nginx-config
+      namespace: production
+      annotations:
+        # 指示这是此站点的 HTTP 配置
+        bunkerweb.io/CONFIG_TYPE: "http"
+        bunkerweb.io/CONFIG_SITE: "custom-app.example.com"
+    data:
+      custom-rules.conf: |
+        # 自定义重写
+        rewrite ^/old-path/(.*)$ /new-path/$1 permanent;
+        
+        # API 的条件请求头
+        location ^~ /api/ {
+          add_header X-API-Gateway "true";
+          proxy_pass http://custom-app-service.production.svc.cluster.local;
+        }
+        
+        # 静态资源缓存
+        location ~* \.(jpg|jpeg|png|gif|ico|css|js)$ {
+          expires 7d;
+          add_header Cache-Control "public, immutable";
+          proxy_pass http://custom-app-service.production.svc.cluster.local;
+        }
+        
+        # 代理到外部服务
+        location /external-api {
+          proxy_pass https://external-service.com;
+          proxy_set_header Host external-service.com;
+          proxy_ssl_server_name on;
+        }
+    ```
+
+##### 比较：原生功能 vs ConfigMap
+
+| NGINX 规则 | BunkerWeb 方法 |
+|-------------|-------------------|
+| `auth-type: basic` | ✅ 原生注解：`USE_AUTH_BASIC` |
+| `whitelist-source-range` | ✅ 原生注解：`WHITELIST_IP` |
+| `if ($http_user_agent ~*)` | ✅ 原生注解：`BLACKLIST_USER_AGENT` |
+| 缓存的 `expires 7d` | ✅ 原生注解：`USE_CLIENT_CACHE` |
+| `limit_conn addr 10` | ✅ 原生注解：`USE_LIMIT_CONN` |
+| 复杂的 `rewrite` | ⚠️ ConfigMap：`CONFIG_TYPE: http` |
+| 自定义 `location` | ⚠️ ConfigMap：`CONFIG_TYPE: http` |
+| 外部 `proxy_pass` | ⚠️ ConfigMap：`CONFIG_TYPE: http` |
+
+---
+
+#### 迁移前后对比
+
+| 指标 | NGINX Ingress | BunkerWeb | 备注 |
+|----------|---------------|-----------|-------------|
+| 平均响应时间 | 45ms | 52ms | +7ms（可接受的安全开销）|
+| 被阻止的请求（XSS/SQLi）| 0 | **127** | WAF 已激活 ✅ |
+| SSL 证书 | 有效 | 有效 | 迁移成功 ✅ |
+| 可用性 | 99.9% | 99.9% | 稳定 ✅ |
+
 
 ## Swarm
 
