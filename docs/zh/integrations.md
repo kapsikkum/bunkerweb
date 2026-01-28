@@ -3554,7 +3554,7 @@ spec:
         backend:
           service:
             # 由 Helm chart 创建
-            name: bunkerweb-external
+            name: bunkerweb-ui
             port:
               # UI 必须使用 HTTPS 端口
               number: 443

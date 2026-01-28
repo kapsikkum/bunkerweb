@@ -3555,7 +3555,7 @@ spec:
         backend:
           service:
             # Creado por el chart de Helm
-            name: bunkerweb-external
+            name: bunkerweb-ui
             port:
               # Usar el puerto HTTPS es obligatorio para la UI
               number: 443
