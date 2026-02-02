@@ -2637,20 +2637,20 @@ Der `bw-autoconf`-Controller überwacht Ihren Orchestrator und schreibt Änderun
 
 ##### Nur Kubernetes
 
-| Setting                                 | Beschreibung                                                                                    | Akzeptierte Werte   | Standard        |
-| --------------------------------------- | ----------------------------------------------------------------------------------------------- | ------------------- | --------------- |
-| `KUBERNETES_VERIFY_SSL`                 | TLS der Kubernetes-API verifizieren                                                             | `yes` oder `no`     | `yes`           |
-| `KUBERNETES_SSL_CA_CERT`                | Pfad zu einem benutzerdefinierten CA-Bundle für die Kubernetes-API                              | Dateipfad           | unset           |
-| `USE_KUBERNETES_FQDN`                   | `<pod>.<ns>.pod.<domain>` statt Pod-IP als Instanz-Hostname verwenden                           | `yes` oder `no`     | `yes`           |
-| `KUBERNETES_INGRESS_CLASS`              | Nur Ingresses mit dieser Klasse verarbeiten                                                     | String              | unset (alle)    |
-| `KUBERNETES_GATEWAY_MODE`               | Gateway-API-Controller statt Ingresses verwenden                                                | `yes` oder `no`     | `no`            |
-| `KUBERNETES_GATEWAY_CLASS`              | Nur Gateways mit dieser Klasse verarbeiten                                                      | String              | unset (alle)    |
-| `KUBERNETES_GATEWAY_API_VERSION`        | Zu verwendende Gateway-API-Version (automatischer Fallback bei fehlender Version)               | `v1`, `v1beta1`, `v1beta2`, `v1alpha2`, `v1alpha1` | `v1` |
-| `KUBERNETES_DOMAIN_NAME`                | Cluster-Domain-Suffix beim Bauen von Upstream-Hosts                                             | String              | `cluster.local` |
-| `KUBERNETES_SERVICE_PROTOCOL`           | Schema für generierte Reverse-Proxy-Hosts                                                       | `http` oder `https` | `http`          |
-| `BUNKERWEB_SERVICE_NAME`                | Service-Name, der beim Patchen des Ingress-/Gateway-Status gelesen wird                         | String              | `bunkerweb`     |
-| `BUNKERWEB_NAMESPACE`                   | Namespace dieses Services                                                                       | String              | `bunkerweb`     |
-| `KUBERNETES_REVERSE_PROXY_SUFFIX_START` | Startindex für generierte `REVERSE_PROXY_HOST_n`/`REVERSE_PROXY_URL_n` bei Multi-Path-Ingresses | Integer (>=0)       | `1`             |
+| Setting                                 | Beschreibung                                                                                    | Akzeptierte Werte                                  | Standard        |
+| --------------------------------------- | ----------------------------------------------------------------------------------------------- | -------------------------------------------------- | --------------- |
+| `KUBERNETES_VERIFY_SSL`                 | TLS der Kubernetes-API verifizieren                                                             | `yes` oder `no`                                    | `yes`           |
+| `KUBERNETES_SSL_CA_CERT`                | Pfad zu einem benutzerdefinierten CA-Bundle für die Kubernetes-API                              | Dateipfad                                          | unset           |
+| `USE_KUBERNETES_FQDN`                   | `<pod>.<ns>.pod.<domain>` statt Pod-IP als Instanz-Hostname verwenden                           | `yes` oder `no`                                    | `yes`           |
+| `KUBERNETES_INGRESS_CLASS`              | Nur Ingresses mit dieser Klasse verarbeiten                                                     | String                                             | unset (alle)    |
+| `KUBERNETES_GATEWAY_MODE`               | Gateway-API-Controller statt Ingresses verwenden                                                | `yes` oder `no`                                    | `no`            |
+| `KUBERNETES_GATEWAY_CLASS`              | Nur Gateways mit dieser Klasse verarbeiten                                                      | String                                             | unset (alle)    |
+| `KUBERNETES_GATEWAY_API_VERSION`        | Zu verwendende Gateway-API-Version (automatischer Fallback bei fehlender Version)               | `v1`, `v1beta1`, `v1beta2`, `v1alpha2`, `v1alpha1` | `v1`            |
+| `KUBERNETES_DOMAIN_NAME`                | Cluster-Domain-Suffix beim Bauen von Upstream-Hosts                                             | String                                             | `cluster.local` |
+| `KUBERNETES_SERVICE_PROTOCOL`           | Schema für generierte Reverse-Proxy-Hosts                                                       | `http` oder `https`                                | `http`          |
+| `BUNKERWEB_SERVICE_NAME`                | Service-Name, der beim Patchen des Ingress-/Gateway-Status gelesen wird                         | String                                             | `bunkerweb`     |
+| `BUNKERWEB_NAMESPACE`                   | Namespace dieses Services                                                                       | String                                             | `bunkerweb`     |
+| `KUBERNETES_REVERSE_PROXY_SUFFIX_START` | Startindex für generierte `REVERSE_PROXY_HOST_n`/`REVERSE_PROXY_URL_n` bei Multi-Path-Ingresses | Integer (>=0)                                      | `1`             |
 
 ### Autoconf-Dienste
 
@@ -4212,18 +4212,6 @@ Anwendung mit benutzerdefinierten NGINX-Regeln über `configuration-snippet`: ko
 | Komplexes `rewrite`            | ⚠️ ConfigMap: `CONFIG_TYPE: http`            |
 | Benutzerdefiniertes `location` | ⚠️ ConfigMap: `CONFIG_TYPE: http`            |
 | Externes `proxy_pass`          | ⚠️ ConfigMap: `CONFIG_TYPE: http`            |
-
----
-
-#### Vorher/Nachher-Vergleich der Migration
-
-| Metrik                         | NGINX Ingress | BunkerWeb | Kommentar                               |
-| ------------------------------ | ------------- | --------- | --------------------------------------- |
-| Durchschnittliche Antwortzeit  | 45ms          | 52ms      | +7ms (akzeptabler Sicherheits-Overhead) |
-| Blockierte Anfragen (XSS/SQLi) | 0             | **127**   | WAF aktiv ✅                             |
-| SSL-Zertifikat                 | Gültig        | Gültig    | Migration OK ✅                          |
-| Verfügbarkeit                  | 99.9%         | 99.9%     | Stabil ✅                                |
-
 
 ## Swarm
 
