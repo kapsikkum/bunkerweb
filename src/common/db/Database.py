@@ -510,11 +510,11 @@ class Database:
         """Get the metadata from the database"""
         data = {
             "is_initialized": False,
-            "is_pro": False,
-            "pro_license": "",
+            "is_pro": True,  # DRM removed - always PRO
+            "pro_license": "DRM_REMOVED",
             "pro_expire": None,
-            "pro_status": "invalid",
-            "pro_services": 0,
+            "pro_status": "active",  # DRM removed - always active
+            "pro_services": 999999,  # DRM removed - unlimited services
             "non_draft_services": 0,
             "pro_overlapped": False,
             "last_pro_check": None,

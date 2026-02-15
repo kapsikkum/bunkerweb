@@ -332,11 +332,11 @@ class Metadata(Base):
 
     id = Column(Integer, primary_key=True, default=1)
     is_initialized = Column(Boolean, nullable=False)
-    is_pro = Column(Boolean, default=False, nullable=False)
-    pro_license = Column(String(128), default="", nullable=True)
+    is_pro = Column(Boolean, default=True, nullable=False)  # DRM removed - always PRO
+    pro_license = Column(String(128), default="DRM_REMOVED", nullable=True)
     pro_expire = Column(DateTime(timezone=True), nullable=True)
-    pro_status = Column(PRO_STATUS_ENUM, default="invalid", nullable=False)
-    pro_services = Column(Integer, default=0, nullable=False)
+    pro_status = Column(PRO_STATUS_ENUM, default="active", nullable=False)  # DRM removed - always active
+    pro_services = Column(Integer, default=999999, nullable=False)  # DRM removed - unlimited
     non_draft_services = Column(Integer, default=0, nullable=False)
     pro_overlapped = Column(Boolean, default=False, nullable=False)
     last_pro_check = Column(DateTime(timezone=True), nullable=True)

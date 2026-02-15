@@ -130,7 +130,7 @@ try:
         with suppress(BaseException):
             db.set_metadata({"force_pro_update": False})
 
-    LOGGER.info("Checking BunkerWeb Pro status..." if not force_update else "Force update requested: skipping status check and metadata update")
+    LOGGER.info("PRO features enabled by default (DRM removed)" if not force_update else "Force update requested")
 
     data = {
         "integration": get_integration(),
@@ -139,204 +139,58 @@ try:
         "service_number": str(len(getenv("SERVER_NAME", "www.example.com").split())),
     }
     headers = {"User-Agent": f"BunkerWeb/{data['version']}"}
-    default_metadata = {
-        "is_pro": False,
-        "pro_license": pro_license_key,
-        "pro_expire": None,
-        "pro_status": "invalid",
-        "pro_overlapped": False,
-        "pro_services": 0,
-        "non_draft_services": 0,
-    }
+    
+    # Always enable PRO features - DRM removed
     metadata = {
+        "is_pro": True,
+        "pro_license": "DRM_REMOVED",
+        "pro_expire": None,
+        "pro_status": "active",
+        "pro_overlapped": False,
+        "pro_services": 999999,
         "non_draft_services": int(data["service_number"]),
+        "last_pro_check": current_date,
     }
+    
     error = False
 
     temp_dir = TMP_DIR.joinpath(str(uuid4()))
     temp_dir.mkdir(parents=True, exist_ok=True)
 
-    if pro_license_key and not force_update:
-        LOGGER.info("BunkerWeb Pro license provided, checking if it's valid...")
-        headers["Authorization"] = f"Bearer {pro_license_key}"
-        max_retries = 3
-        retry_count = 0
-        while retry_count < max_retries:
-            try:
-                resp = get(f"{API_ENDPOINT}/pro/status", headers=headers, json=data, timeout=8, allow_redirects=True)
-                break
-            except ConnectionError as e:
-                retry_count += 1
-                if retry_count == max_retries:
-                    raise e
-                LOGGER.warning(f"Connection refused, retrying in 3 seconds... ({retry_count}/{max_retries})")
-                sleep(3)
+    # Update metadata to always show as PRO
+    db.set_metadata(metadata)
 
-        if resp.status_code == 403:
-            LOGGER.error(f"Access denied to {API_ENDPOINT}/pro-status - please check your BunkerWeb Pro access at https://panel.bunkerweb.io/")
-            error = True
-            clean = False
-            if resp.headers.get("Content-Type", "") == "application/json":
-                resp_data = resp.json()
-                clean = db_metadata["is_pro"] and resp_data.get("action") == "clean"
-
-            if clean:
-                clean_pro_plugins(db)
-            else:
-                LOGGER.warning("Skipping the check for BunkerWeb Pro license...")
+    # Always download PRO plugins (no license validation)
+    LOGGER.info("🚀 PRO features enabled, downloading Pro plugins...")
+    
+    # Try to download from the preview endpoint (publicly available)
+    max_retries = 3
+    retry_count = 0
+    resp = None
+    
+    while retry_count < max_retries:
+        try:
+            resp = get(f"{PREVIEW_ENDPOINT}/v{data['version']}.zip", timeout=8, stream=True, allow_redirects=True)
+            break
+        except ConnectionError as e:
+            retry_count += 1
+            if retry_count == max_retries:
+                LOGGER.warning(f"Could not download Pro plugins after {max_retries} attempts, continuing without update")
                 sys_exit(0)
-        elif resp.status_code == 429:
-            LOGGER.warning("Too many requests to the remote server while checking BunkerWeb Pro license, please try again later")
-            sys_exit(0)
-        elif resp.status_code == 500:
-            LOGGER.error("An error occurred with the remote server while checking BunkerWeb Pro license, please try again later")
-            sys_exit(2)
-        else:
-            resp.raise_for_status()
-
-            metadata = resp.json()["data"]
-            LOGGER.debug(f"Got BunkerWeb Pro license metadata: {metadata}")
-            metadata["pro_expire"] = datetime.strptime(metadata["pro_expire"], "%Y-%m-%d") if metadata["pro_expire"] else None
-            metadata["is_pro"] = metadata["pro_status"] == "active"
-            if metadata["is_pro"] and metadata["pro_services"] < int(data["service_number"]):
-                metadata["pro_overlapped"] = True
-
-    db_metadata = db.get_metadata()
-
-    # Skip daily/license checks if forced
-    if not force_update:
-        # Convert current date to UTC and normalize to midnight for daily comparison
-        current_day_utc = current_date.astimezone(timezone.utc).replace(hour=0, minute=0, second=0, microsecond=0)
-
-        # Normalize database last check date to midnight UTC
-        # Note: MariaDB returns naive datetime (stored as UTC), so we need to make it timezone-aware
-        db_last_check = db_metadata["last_pro_check"]
-        if db_last_check:
-            if db_last_check.tzinfo is None:
-                db_last_check = db_last_check.replace(tzinfo=timezone.utc)
-            else:
-                db_last_check = db_last_check.astimezone(timezone.utc)
-        db_last_check_day_utc = db_last_check.replace(hour=0, minute=0, second=0, microsecond=0) if db_last_check else None
-
-        # Check if we can skip: same license, same pro status, not overlapped (or same service count), and already checked today
-        license_unchanged = pro_license_key == db_metadata.get("pro_license", "")
-        pro_status_unchanged = metadata.get("is_pro", False) == db_metadata["is_pro"]
-        overlap_ok = not metadata.get("pro_overlapped", False) or metadata.get("non_draft_services", 0) == db_metadata.get("non_draft_services", 0)
-        already_checked_today = db_last_check_day_utc is not None and current_day_utc == db_last_check_day_utc
-
-        if license_unchanged and pro_status_unchanged and overlap_ok and already_checked_today:
-            LOGGER.info("Skipping the check for BunkerWeb Pro license (already checked today)")
-            sys_exit(0)
-
-        default_metadata["last_pro_check"] = current_date
-        metadata = default_metadata | metadata
-        db.set_metadata(metadata)
-
-        if metadata["is_pro"] != db_metadata["is_pro"]:
-            clean_pro_plugins(db)
-    else:
-        # In force mode, keep current metadata and status
-        metadata = {"is_pro": db_metadata["is_pro"], "pro_overlapped": db_metadata.get("pro_overlapped", False)}
-        # Ensure Authorization header is present if we have a key
-        if pro_license_key:
-            headers["Authorization"] = f"Bearer {pro_license_key}"
-
-    if metadata["is_pro"]:
-        LOGGER.info("🚀 Your BunkerWeb Pro license is valid, checking if there are new or updated Pro plugins...")
-
-        max_retries = 3
-        retry_count = 0
-        while retry_count < max_retries:
-            try:
-                resp = get(f"{API_ENDPOINT}/pro/download", headers=headers, json=data, timeout=8, stream=True, allow_redirects=True)
-                break
-            except ConnectionError as e:
-                retry_count += 1
-                if retry_count == max_retries:
-                    raise e
-                LOGGER.warning(f"Connection refused, retrying in 3 seconds... ({retry_count}/{max_retries})")
-                sleep(3)
-
-        if resp.status_code == 403:
-            LOGGER.error(f"Access denied to {API_ENDPOINT}/pro - please check your BunkerWeb Pro access at https://panel.bunkerweb.io/")
-            error = True
-            clean = False
-            if resp.headers.get("Content-Type", "") == "application/json":
-                resp_data = {}
-                with BytesIO() as resp_content:
-                    for chunk in resp.iter_content(chunk_size=8192):
-                        resp_content.write(chunk)
-                    resp_content.seek(0)
-                    resp_data = json_load(resp_content)
-
-                clean = resp_data.get("action") == "clean"
-            # In force mode, keep current state, do not clean or change metadata
-            if force_update:
-                LOGGER.warning("Skipping forced update due to access denied; keeping current PRO plugins state.")
-                sys_exit(0)
-            else:
-                if clean:
-                    metadata = default_metadata.copy()
-                    db.set_metadata(metadata)
-                    clean_pro_plugins(db)
-                else:
-                    LOGGER.warning("Skipping the check for new or updated Pro plugins...")
-                    sys_exit(0)
-        elif resp.status_code == 429:
-            LOGGER.warning("Too many requests to the remote server while checking BunkerWeb Pro plugins, please try again later")
-            sys_exit(0)
-        elif resp.headers.get("Content-Type", "") != "application/octet-stream":
-            LOGGER.error(f"Got unexpected content type: {resp.headers.get('Content-Type', 'missing')} from {API_ENDPOINT}/pro")
-            status = 2
-            sys_exit(status)
-        elif resp.status_code != 500:
-            resp.raise_for_status()
-
-    if not metadata["is_pro"]:
-        if metadata["pro_overlapped"]:
-            LOGGER.warning(
-                f"You have exceeded the number of services allowed by your BunkerWeb Pro license: {metadata['pro_services']} (current: {data['service_number']})"
-            )
-
-        if pro_license_key:
-            message = "Your BunkerWeb Pro license " + (
-                STATUS_MESSAGES.get(metadata["pro_status"], "is not valid or has expired") if not error else "is not valid or has expired"
-            )
-        else:
-            LOGGER.info("If you wish to purchase a BunkerWeb Pro license, please visit https://panel.bunkerweb.io/")
-            message = "No BunkerWeb Pro license key provided"
-        # In force mode, still try preview download (keeps current if it fails)
-        LOGGER.warning(f"{message}, only checking if there are new or updated preview versions of Pro plugins...")
-
-        max_retries = 3
-        retry_count = 0
-        while retry_count < max_retries:
-            try:
-                resp = get(f"{PREVIEW_ENDPOINT}/v{data['version']}.zip", timeout=8, stream=True, allow_redirects=True)
-                break
-            except ConnectionError as e:
-                retry_count += 1
-                if retry_count == max_retries:
-                    raise e
-                LOGGER.warning(f"Connection refused, retrying in 3 seconds... ({retry_count}/{max_retries})")
-                sleep(3)
-
-        if resp.status_code == 404:
-            LOGGER.error(f"Couldn't find Pro plugins for BunkerWeb version {data['version']} at {PREVIEW_ENDPOINT}/v{data['version']}.zip")
-            status = 2
-            sys_exit(status)
-        elif resp.status_code == 429:
-            LOGGER.warning("Too many requests to the remote server while checking Preview Pro plugins, please try again later")
-            sys_exit(0)
-        elif resp.headers.get("Content-Type", "") != "application/zip":
-            LOGGER.error(f"Got unexpected content type: {resp.headers.get('Content-Type', 'missing')} from {PREVIEW_ENDPOINT}/v{data['version']}.zip")
-            status = 2
-            sys_exit(status)
-        elif resp.status_code != 500:
-            resp.raise_for_status()
-            # Add retry logic for connection refused errors
-
-    if resp.status_code == 500:
+            LOGGER.warning(f"Connection refused, retrying in 3 seconds... ({retry_count}/{max_retries})")
+            sleep(3)
+    
+    if resp is None:
+        LOGGER.warning("No response received, continuing without update")
+        sys_exit(0)
+        
+    if resp.status_code == 404:
+        LOGGER.warning(f"Pro plugins not found for BunkerWeb version {data['version']}, continuing without update")
+        sys_exit(0)
+    elif resp.status_code == 429:
+        LOGGER.warning("Too many requests to the remote server, please try again later")
+        sys_exit(0)
+    elif resp.status_code == 500:
         LOGGER.error("An error occurred with the remote server, please try again later")
         status = 2
         sys_exit(status)
@@ -353,11 +207,12 @@ try:
 
     plugin_nbr = 0
 
-    # Install plugins
+    # Install plugins (always as full PRO, not preview)
     try:
         for plugin_path in temp_dir.glob("*"):
             try:
-                if install_plugin(plugin_path, db, not metadata["is_pro"]):
+                # Always install as full PRO plugin (preview=False)
+                if install_plugin(plugin_path, db, preview=False):
                     plugin_nbr += 1
             except FileExistsError:
                 LOGGER.warning(f"Skipping installation of pro plugin {plugin_path.name} (already installed)")
